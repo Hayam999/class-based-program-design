@@ -1,0 +1,3 @@
+import tester .*;
+
+class Examples {}
