@@ -11,62 +11,73 @@ class DistanceCalculator {
     }
 }
 class MyPosn extends Posn {
-	  // standard constructor
-	  MyPosn(int x, int y) {
-	    super(x, y);
-	  }
-	  // constructor to convert from a Posn to a MyPosn
-	  MyPosn(Posn p) {
-	    this(p.x, p.y);
-	  }
-	  MyPosn add(MyPosn p) {
-		  return new MyPosn(this.x + p.x, this.y + p.y);
-	  }
-	  boolean isOffScreen(int width, int height) {
-		  return ((this.x >= width) || (this.x <= 0) || (this.y >= height) || (this.y <= 0));
-	  }
-	  public boolean isNear(MyPosn p) {
-		  DistanceCalculator calc = new DistanceCalculator();
-		  @SuppressWarnings("static-access")
-		double result = calc.distance((double)this.x, (double) this.y, (double) p.x, (double) p.y);
-		  return (result <= 10);
-	  }
+  // standard constructor
+  MyPosn(int x, int y) {
+    super(x, y);
+  }
+  // constructor to convert from a Posn to a MyPosn
+  MyPosn(Posn p) {
+    this(p.x, p.y);
+  }
+  // add given position to this position
+  MyPosn add(MyPosn p) {
+	  return new MyPosn(this.x + p.x, this.y + p.y);
+  }
+  // checks if given Position is out of the screen with given width and height or not
+  boolean isOffScreen(int width, int height) {
+	  return ((this.x >= width) || (this.x <= 0) || (this.y >= height) || (this.y <= 0));
+  }
+  /**
+   * Determines if the given position is within 10 units of this position.
+   * @param p The position to check proximity to
+   * @return true if the positions are within 10 units of each other
+   */
+  public boolean isNear(MyPosn p) {
+      double result = DistanceCalculator.distance(this.x, this.y, p.x, p.y);
+      return (result <= 10);
+  }
+  
 }
 
 interface IGamePiece {
-	public MyPosn getPosition();
-	public int getCircleSize();
-	public int getExplosionNum();
-	public IGamePiece move() ;
-	public WorldImage draw();
-	public boolean isOffScreen(int width, int height);	
-	public boolean hitAny(ILoGamePiece otherPieces);
-	public boolean isNear(IGamePiece piece);
+public MyPosn getPosition();
+public int getCircleSize();
+public int getExplosionNum();
+public IGamePiece move() ;
+public WorldImage draw();
+public boolean isOffScreen(int width, int height);	
+public boolean hitAny(ILoGamePiece otherPieces);
+public boolean isNear(IGamePiece piece);
 }	  
 abstract class GamePiece implements IGamePiece{
-	MyPosn velocity;
-	MyPosn position;
-	GamePiece(MyPosn velocity, MyPosn position) {
-		this.velocity = velocity;
-		this.position = position;
-	}
-	public boolean isOffScreen(int width, int height) {
-		return (this.position.isOffScreen(width, height));
-	}
-	public boolean hitAny(ILoGamePiece otherPieces) {
-		return otherPieces.anyHaveHit(this);
-	}
-	public boolean isNear(IGamePiece piece) {
-		// check the problem with the piece.position;
-		return this.position.isNear(piece.getPosition());
-	}
-	public int getExplosionNum() {
-		return 0;
-	}
-	public int getCircleSize() {
-	return 0;	
-	}
+MyPosn velocity;
+MyPosn position;
+GamePiece(MyPosn velocity, MyPosn position) {
+	this.velocity = velocity;
+	this.position = position;
 }
+public boolean isOffScreen(int width, int height) {
+	return (this.position.isOffScreen(width, height));
+}
+public boolean hitAny(ILoGamePiece otherPieces) {
+	return otherPieces.anyHaveHit(this);
+}
+public boolean isNear(IGamePiece piece) {
+	// check the problem with the piece.position;
+	return this.position.isNear(piece.getPosition());
+}
+public int getExplosionNum() {
+	return 0;
+}
+public int getCircleSize() {
+return 0;	
+}
+}
+
+
+//////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////
+
 class Ship extends GamePiece{
 	Ship(MyPosn position) {
 		super(new MyPosn(1, 0), position);
@@ -392,7 +403,7 @@ class MyGame extends World{
 	@Override
 	//This method gets called every tickrate seconds ( see bellow in example class).
 	public MyGame onTick() {
-		return this.addRandomText().addRandomCircles().incrementGameTick()
+		return this.incrementGameTick().produceShips()
 				.removeOffScreenPieces().movePieces().countDestroyedShips().handleCollision();
 	}
 	public MyGame countDestroyedShips() {
@@ -424,6 +435,12 @@ class MyGame extends World{
 	return new MyGame(newShips, newBullets, this.destroyedShipsNum, this.bulletsOnScreen,
 			this.numOfBullets, this.WIDTH, this.HEIGHT,
 			this.currentTick, this.finalTick);
+	}
+	public MyGame produceShips() {
+		ILoGamePiece newShips = this.ships.spawn(this.HEIGHT, this.WIDTH);
+		return new MyGame(newShips, this.bullets, this.destroyedShipsNum, this.bulletsOnScreen,
+				this.numOfBullets, this.WIDTH, this.HEIGHT,
+				this.currentTick, this.finalTick);
 	}
 	public MyGame addRandomText() {
 		return new MyGame(this.ships, this.bullets, this.destroyedShipsNum,
@@ -472,10 +489,70 @@ class MyGame extends World{
 }
         
 class ExamplesMyWorldProgram {
-  boolean testBigBang(Tester t) {
-	MyGame world = new MyGame(10);
-	//width, height, tickrate = 0.5 means every 0.5 seconds the onTick method will get called.
-    return world.bigBang(500, 500, 7.0/28.0);
-  }
+	int width = 500;
+	int height = 500;
+	MyPosn ps1 = new MyPosn(10, 10);
+	MyPosn ps2 = new MyPosn(2, 2);
+	MyPosn offSP1 = new MyPosn(500, 200);
+	MyPosn offSP2 = new MyPosn(800, 100);
+	MyPosn offSP3 = new MyPosn(0, 20);
+	MyPosn offSP4 = new MyPosn(-1, 100);
+	MyPosn offSP5 = new MyPosn(200, 500);
+	MyPosn offSP6 = new MyPosn(88, 900);
+	MyPosn offSP7 = new MyPosn(45, 0);
+	MyPosn offSP8 = new MyPosn(22, -20);
+	MyPosn onSP1 = new MyPosn(33, 65);
+	MyPosn ps3 = new MyPosn(3, 4);
+	MyPosn nearPs3 = new MyPosn(7, 7);
+	MyPosn ps4 = new MyPosn(22, 98);
+	MyPosn ps5 = new MyPosn(33, 10);
+	
+	Ship ship1 = new Ship(ps1);
+	
+	MyPosn pb1 = new MyPosn(50, 50);
+	Bullet bullet1 = new Bullet(pb1);
+	
+	boolean testMyPosn(Tester t) {
+		return t.checkExpect(ps1.add(ps2), new MyPosn(12, 12)) &&
+				t.checkExpect(onSP1.isOffScreen(width, height), false) &&
+				t.checkExpect(ps1.isOffScreen(width, height), false) &&
+				t.checkExpect(offSP1.isOffScreen(width, height), true) &&
+				t.checkExpect(offSP2.isOffScreen(width, height), true) &&
+				t.checkExpect(offSP3.isOffScreen(width, height), true) &&
+				t.checkExpect(offSP4.isOffScreen(width, height), true) &&
+				t.checkExpect(offSP5.isOffScreen(width, height), true) &&
+				t.checkExpect(offSP6.isOffScreen(width, height), true) &&
+				t.checkExpect(offSP7.isOffScreen(width, height), true) &&
+				t.checkExpect(offSP8.isOffScreen(width, height), true) &&
+				t.checkExpect(ps3.isNear(nearPs3), true) &&
+				t.checkExpect(ps4.isNear(ps5), false);
+		}
+	
+	boolean testShip(Tester t) {
+	
+		return t.checkExpect(ship1.move(),new Ship(new MyPosn(11, 10))) &&
+			   t.checkExpect(ship1.draw(), 
+						new CircleImage(50, OutlineMode.SOLID, Color.GREEN)) &&
+			   t.checkExpect(ship1.getPosition(), new MyPosn(10, 10)) &&
+			   t.checkExpect(ship1.isOffScreen(10, 10), true) &&
+			//   t.checkExpect(ship1.isOffScreen(1, 5), false) &&
+			   t.checkExpect(ship1.isOffScreen(23, 10), true) &&
+			   t.checkExpect(ship1.isOffScreen(-5, 12), true) &&
+			   t.checkExpect(ship1.isOffScreen(2, -10), true) &&
+			   t.checkExpect(ship1.isOffScreen(-5, 89), true);
+	}
+	boolean testBullet(Tester t) {
+	return t.checkExpect(bullet1.move(), new Bullet(new MyPosn(50, 49))) &&
+		   t.checkExpect(bullet1.draw(), new CircleImage(10, OutlineMode.SOLID, Color.RED)) &&
+		   t.checkExpect(bullet1.getExplosionNum(), 1) &&
+		   t.checkExpect(bullet1.getPosition(), new MyPosn(50, 50)) &&
+		   t.checkExpect(bullet1.getCircleSize(), 10);
+	}
+
+	//boolean testBigBang(Tester t) {
+	//MyGame world = new MyGame(10);
+	////width, height, tickrate = 0.5 means every 0.5 seconds the onTick method will get called.
+    //return world.bigBang(500, 500, 7.0/28.0);
+  //}
 }
 
