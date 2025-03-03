@@ -506,11 +506,31 @@ class ExamplesMyWorldProgram {
 	MyPosn nearPs3 = new MyPosn(7, 7);
 	MyPosn ps4 = new MyPosn(22, 98);
 	MyPosn ps5 = new MyPosn(33, 10);
+	MyPosn pb1 = new MyPosn(50, 50);
+	MyPosn pb2 = new MyPosn(98, 39);
+	MyPosn pb3 = new MyPosn(102, 38);
+	MyPosn pb4 = new MyPosn(93, 43);
 	
 	Ship ship1 = new Ship(ps1);
+	Ship onScreenShip = new Ship(onSP1);
+	Ship ship2 = new Ship(ps3);
+	Ship nearShip2 = new Ship(nearPs3);
+	ILoGamePiece onAOffScreenships = new ConsLoShip(ship1, new ConsLoShip(onScreenShip, 
+			new ConsLoShip(ship2, new ConsLoShip(nearShip2, new MtLoShip()))));
 	
-	MyPosn pb1 = new MyPosn(50, 50);
+	
+	Bullet offScreenBullet = new Bullet(offSP4);
 	Bullet bullet1 = new Bullet(pb1);
+	Bullet bullet2 = new Bullet(pb2);
+	Bullet bullet3 = new Bullet(pb3);
+	Bullet bullet4 = new Bullet(pb4);
+	Bullet hitNearShip2 = new Bullet(nearPs3);
+	ILoGamePiece onAOffScreenBullets = new ConsLoBullet(offScreenBullet, 
+			new ConsLoBullet(bullet1, new ConsLoBullet(bullet2,
+					new ConsLoBullet(bullet3, new ConsLoBullet(bullet4, 
+							new MtLoBullet())))));
+	
+	
 	
 	boolean testMyPosn(Tester t) {
 		return t.checkExpect(ps1.add(ps2), new MyPosn(12, 12)) &&
@@ -527,6 +547,15 @@ class ExamplesMyWorldProgram {
 				t.checkExpect(ps3.isNear(nearPs3), true) &&
 				t.checkExpect(ps4.isNear(ps5), false);
 		}
+	boolean testGamePiece(Tester t) {
+		return t.checkExpect(offScreenBullet.isOffScreen(width, height), true) &&
+				t.checkExpect(ship1.isNear(offScreenBullet), false) &&
+				t.checkExpect(ship2.isNear(nearShip2), true) &&
+				t.checkExpect(hitNearShip2.hitAny(onAOffScreenships), true) &&
+				t.checkExpect(ship1.hitAny(onAOffScreenBullets), false);
+				
+		
+	}
 	
 	boolean testShip(Tester t) {
 	
@@ -535,11 +564,12 @@ class ExamplesMyWorldProgram {
 						new CircleImage(50, OutlineMode.SOLID, Color.GREEN)) &&
 			   t.checkExpect(ship1.getPosition(), new MyPosn(10, 10)) &&
 			   t.checkExpect(ship1.isOffScreen(10, 10), true) &&
-			//   t.checkExpect(ship1.isOffScreen(1, 5), false) &&
+			   t.checkExpect(ship1.isOffScreen(1, 5), true) &&
 			   t.checkExpect(ship1.isOffScreen(23, 10), true) &&
 			   t.checkExpect(ship1.isOffScreen(-5, 12), true) &&
 			   t.checkExpect(ship1.isOffScreen(2, -10), true) &&
-			   t.checkExpect(ship1.isOffScreen(-5, 89), true);
+			   t.checkExpect(ship1.isOffScreen(-5, 89), true) &&
+			   t.checkExpect(onScreenShip.isOffScreen(width, height), false);
 	}
 	boolean testBullet(Tester t) {
 	return t.checkExpect(bullet1.move(), new Bullet(new MyPosn(50, 49))) &&
