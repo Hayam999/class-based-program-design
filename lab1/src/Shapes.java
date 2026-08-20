@@ -1,4 +1,4 @@
-import tester.*;
+import tester.Tester;
 
 
 // make the first project work
@@ -55,4 +55,12 @@ class ExamplesShapes {
     IShape addMouth = new Combo(this.rBot, this.circle);
     IShape addLeftEye = new Combo(this.rleft, this.addMouth);
     IShape face = new Combo(new Rect(60, 20, 20, 20), this.addLeftEye); 
+    boolean testCircle(Tester t) {
+    return t.checkExpect(this.circle, new Circle(50, 50, 50));
+}
+
+// this class is essentiall to run the tests in any class that starts with "Examples"
+    public static void main(String[] args) {
+    Tester.runReport(new ExamplesShapes(), false, false);
+  }
 }
