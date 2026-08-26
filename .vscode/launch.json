@@ -1,0 +1,33 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "ExamplesGamePiece",
+      "request": "launch",
+      "mainClass": "ExamplesGamePiece",
+      "projectName": "cs3500-object-oriented-design_f5f24885"
+    },
+    {
+      "type": "java",
+      "name": "ExamplesShapes",
+      "request": "launch",
+      "mainClass": "ExamplesShapes",
+      "projectName": "cs3500-object-oriented-design_f5f24885"
+    },
+    {
+      "type": "java",
+      "name": "ExamplesDogs",
+      "request": "launch",
+      "mainClass": "ExamplesDogs",
+      "projectName": "cs3500-object-oriented-design_f5f24885"
+    },
+    {
+      "type": "java",
+      "name": "Debug Current File",
+      "request": "launch",
+      "mainClass": "${file}",
+      "projectName": "cs3500-object-oriented-design_f5f24885"
+    }
+  ]
+}
