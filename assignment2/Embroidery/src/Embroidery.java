@@ -5,6 +5,8 @@ interface IMotif {
     double averageDifficulty();
     double sumOfDifficulties();
     int numOfStitches();
+    String embroideryInfo();
+   
 }
 
 interface ILoMotif {
@@ -13,8 +15,9 @@ interface ILoMotif {
     double sumOfDifficulties();
     double sumOfDifficultiesHelper(double sumOfPreDifficulties);
     int numOfStitches();
-    int numOfStitchesHelper(int numOfPreStitches);
-
+    int numOfStitchesHelper(int numOfPreStitches); 
+    String embroideryInfo();  
+    String embroideryInfoHelper();
 }
 
 class CrossStitchMotif implements IMotif{
@@ -37,6 +40,11 @@ class CrossStitchMotif implements IMotif{
     public int numOfStitches() {
         return 1;
     }
+    public String embroideryInfo() {
+        return this.description + " (cross stitch)";
+    }
+
+  
 }
 
 class ChainStitchMotif implements IMotif {
@@ -60,6 +68,10 @@ class ChainStitchMotif implements IMotif {
             return 1;
         }
 
+    public String embroideryInfo() {
+        return   this.description + " (chain stitch)";
+    }
+   
 }
 
 class GroupMotif implements IMotif {
@@ -82,6 +94,11 @@ class GroupMotif implements IMotif {
     public int numOfStitches() {
             return this.motifs.numOfStitches();
         }
+    
+    public String embroideryInfo() {
+        return this.motifs.embroideryInfo();
+    }
+  
 }
 
 class MtLoMotif implements ILoMotif{
@@ -106,6 +123,15 @@ class MtLoMotif implements ILoMotif{
         return numOfPreStitches;
     }
 
+     public String embroideryInfo() {
+          return  "";
+
+    }
+
+     public String embroideryInfoHelper() {
+          return  "";
+
+    }
 }
 
 class ConsLoMotif implements ILoMotif {
@@ -155,6 +181,16 @@ class ConsLoMotif implements ILoMotif {
         numOfPreStitches = this.first.numOfStitches() + numOfPreStitches;
         return this.rest.numOfStitchesHelper(numOfPreStitches);
     }
+
+    public String embroideryInfo() {
+        return this.first.embroideryInfo() + this.rest.embroideryInfoHelper();
+    }
+    public String embroideryInfoHelper() {
+        return ", " +  this.first.embroideryInfo() + this.rest.embroideryInfoHelper();
+
+    }
+
+    
 }
 
 class EmbroideryPiece {
@@ -170,28 +206,42 @@ class EmbroideryPiece {
     public double averageDifficulty() {
         return this.motif.averageDifficulty();
     }
+
+    // produces one string that has in it all names of motifs in the piece
+    public String embroideryInfo() {
+
+        return this.name + ": " + this.motif.embroideryInfo() + ".";
+    }
 } 
 
 
 class ExamplesEmbroidery {
     IMotif bird = new CrossStitchMotif("bird", 4.5);
-    IMotif tree = new CrossStitchMotif("tree", 3.0);
-    IMotif rose = new CrossStitchMotif("a green beautiful flower", 5.0);
-    IMotif poppy = new ChainStitchMotif("a beautiful white puppy", 4.75);
-    IMotif daisy = new CrossStitchMotif("angry daisy design", 3.2);
+    IMotif tree = new ChainStitchMotif("tree", 3.0);
+    IMotif rose = new CrossStitchMotif("rose", 5.0);
+    IMotif poppy = new ChainStitchMotif("puppy", 4.75);
+    IMotif daisy = new CrossStitchMotif("daisy", 3.2);
 
     ILoMotif loFlowerMotifs = new ConsLoMotif(rose, new ConsLoMotif(poppy, new ConsLoMotif(daisy, new MtLoMotif())));
-    IMotif flowers = new GroupMotif("Group of motifs that represents the flowers design", loFlowerMotifs);
+    IMotif flowers = new GroupMotif("flowers", loFlowerMotifs);
 
     ILoMotif loNatureMotifs = new ConsLoMotif(bird, new ConsLoMotif(tree, loFlowerMotifs));
-    IMotif nature = new GroupMotif("group of designs that represent the pillow covre", loNatureMotifs);
+    IMotif nature = new GroupMotif("nature", loNatureMotifs);
 
 
     ILoMotif mtLo = new MtLoMotif();
     ILoMotif oneMotifList = new ConsLoMotif(bird, new MtLoMotif());
-   IMotif emptyGroup = new GroupMotif("an empty group of motifs", new MtLoMotif());
+    IMotif emptyGroup = new GroupMotif("empty", new MtLoMotif());
+
+    EmbroideryPiece singleMotifPiece = new EmbroideryPiece("Coaster", new CrossStitchMotif("star", 2.0));
  
-    EmbroideryPiece pillowCover = new EmbroideryPiece("a list of motifs that represents the desing of the pillow cover", nature);
+    ILoMotif twoMotifList = new ConsLoMotif(new ChainStitchMotif("wave", 2.5),
+                                new ConsLoMotif(new CrossStitchMotif("sun", 3.5), new MtLoMotif()));
+    IMotif twoMotifGroup = new GroupMotif("two motifs", twoMotifList);
+    EmbroideryPiece twoMotifPiece = new EmbroideryPiece("Bookmark", twoMotifGroup);
+ 
+ 
+    EmbroideryPiece pillowCover = new EmbroideryPiece("Pillow Cover", nature);
 
 
     boolean testSingleMotifAverageDifficulty(Tester t) {
@@ -293,7 +343,26 @@ class ExamplesEmbroidery {
     boolean testEmbroideryPieceAverageDifficulty(Tester t) {
         return t.checkInexact(this.pillowCover.averageDifficulty(), 4.09, 0.001);
     }
+    
+      boolean testEmbroideryInfoPillowCover(Tester t) {
+        return t.checkExpect(this.pillowCover.embroideryInfo(),
+            "Pillow Cover: bird (cross stitch), tree (chain stitch), rose (cross stitch), "
+            + "puppy (chain stitch), daisy (cross stitch).");
+    }
  
+    //Single leaf motif, no group/list involved at all — checks the
+    // no-comma, single-entry case.
+    boolean testEmbroideryInfoSingleMotif(Tester t) {
+        return t.checkExpect(this.singleMotifPiece.embroideryInfo(),
+            "Coaster: star (cross stitch).");
+    }
+ 
+    // Exactly two motifs, chain stitch listed first — checks comma
+    // placement and that stitch-type labeling isn't order-dependent.
+    boolean testEmbroideryInfoTwoMotifs(Tester t) {
+        return t.checkExpect(this.twoMotifPiece.embroideryInfo(),
+            "Bookmark: wave (chain stitch), sun (cross stitch).");
+    }
 
 
 public static void main(String[] args) {
