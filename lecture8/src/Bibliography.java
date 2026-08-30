@@ -1,3 +1,9 @@
+/**
+ * the Tester library is actually from the course site material, and the course suppose that i'm working with Eclipse, but i didn't, i'm actually working with vsCode, so do you think this is the main problem , and here is the file of Teseter.jar if you wanted to review it
+ * run the upper command on claude, 
+ * it will change the tester library to match vsCode, maybe it will work
+ */
+
 import tester.Tester;
 
 interface IDocument {
@@ -10,6 +16,10 @@ interface IDocument {
 
 interface ILoDocument {
     ILoDocument sort();
+
+    // return reversed version from itself
+    ILoDocument reverse();
+    ILoDocument reverseHelper(ILoDocument reversed);
     
     // Remove any duplicates from the object and only keep one version of the document;
     ILoDocument removeDuplicates();
@@ -18,7 +28,7 @@ interface ILoDocument {
     ILoDocument removDuplicatesHelper(ILoDocument newListAcc);
 
     // Remove any doc = currentDoc and produce a new filteredList free from repetition
-    ILoDocument filterFromFirst(IDocument currentDoc, ILoDocument filteredList);
+    ILoDocument filterFromFirst(IDocument currentDoc, ILoDocument newRest);
 }
 
 class Book implements IDocument {
@@ -89,10 +99,16 @@ class MtLoDocument implements ILoDocument {
     }
 
     public ILoDocument removDuplicatesHelper(ILoDocument newListAcc) {
-        return newListAcc;
+        return newListAcc.reverse();
     }
-    public ILoDocument filterFromFirst(IDocument currentDoc, ILoDocument filteredList) {
-        return filteredList;
+    public ILoDocument filterFromFirst(IDocument currentDoc, ILoDocument newRest) {
+        return newRest;
+    }
+    public ILoDocument reverse() {
+        return new MtLoDocument();
+    }
+    public ILoDocument reverseHelper(ILoDocument reversed) {
+        return reversed;
     }
 }
 
@@ -114,19 +130,28 @@ class ConsLoDocument implements ILoDocument {
     }
 
     public ILoDocument removDuplicatesHelper(ILoDocument newListAcc) {
-        ILoDocument filteredList = filterFromFirst(this.first, newListAcc);
-        newListAcc = new ConsLoDocument(first, newListAcc);
-        return filteredList.removDuplicatesHelper(newListAcc);
+        // gives you a new list filtered completely from any repeition of this.first
+       ILoDocument newRest = this.filterFromFirst(this.first, new MtLoDocument());
+       newListAcc = new ConsLoDocument(this.first, newListAcc);
+       return newRest.removDuplicatesHelper(newListAcc);
     }
 
-    public ILoDocument filterFromFirst(IDocument currentDoc, ILoDocument filteredList) {
+    public ILoDocument filterFromFirst(IDocument currentDoc, ILoDocument newRest) {
             if (currentDoc.sameAuthor(this.first.getAuthor()) && (currentDoc.sameTitle(this.first.getTitle()))) {
-                return this.rest.filterFromFirst(currentDoc, filteredList);
+                return this.rest.filterFromFirst(currentDoc, newRest);
         } 
         else {
-            filteredList = new ConsLoDocument(this.first, filteredList);
-            return this.rest.filterFromFirst(currentDoc, filteredList);
+            newRest = new ConsLoDocument(this.first, newRest);
+            return this.rest.filterFromFirst(currentDoc, newRest);
         }
+    }
+
+    public ILoDocument reverse() {
+        return reverseHelper(new MtLoDocument());
+    }
+    public ILoDocument reverseHelper(ILoDocument reversed) {
+        reversed = new ConsLoDocument(this.first, reversed);
+        return this.rest.reverseHelper(reversed);
     }
 
 }
@@ -226,21 +251,15 @@ class ExamplesDocuments {
     boolean testRemoveDuplicatesEmptyBib(Tester t) {
         return t.checkExpect(this.emtpyBib.removeDuplicates(), new MtLoDocument());
     }
-   // DEBUG that test, the problem is about wether to preserve the order or not
-   // so i've created that 2 options
-   // OPTION 1: sort everyThing before returning and before testing so that
-   // you make sure every thing is sorted, and this is the easy to do 
-   // unclean solution as i think
-   // OPTION 2: and that option is i guess more educative and will make me 
-   // understand the recursion process and the call stack more deepley, which is 
-   // to try and return the new list in the same old order, and if you are to do this
-   // you should redesing your methods to make this happen + understand the process
-   // deeply using the debugre
-    // TODO make the dubugger work for that file 
+
+    ILoDocument twoBooks = new ConsLoDocument(book2, new ConsLoDocument(article1, emtpyBib));
+    boolean testFilterFromFirst(Tester t) {
+        return t.checkExpect(twoBooks.filterFromFirst(book2, emtpyBib), new ConsLoDocument(article1, emtpyBib));
+    }
     boolean testRemoveDuplicatesNoDuplicates(Tester t) {
         return t.checkExpect(this.noDuplicatesBib.removeDuplicates(), this.noDuplicatesBib);
     }
-/** 
+ 
     boolean testRemoveDuplicatesWithDuplicates(Tester t) {
         return t.checkExpect(this.duplicatesBib.removeDuplicates(), this.dedupedBib);
     }
@@ -270,7 +289,7 @@ class ExamplesDocuments {
     boolean testConsLoDocumentRest(Tester t) {
         return t.checkExpect(((ConsLoDocument) this.twoDocBib).rest, this.oneDocBib);
     }
-*/
+
     public static void main(String[] args) {
         Tester.runReport(new ExamplesDocuments(), false, false);
     }
