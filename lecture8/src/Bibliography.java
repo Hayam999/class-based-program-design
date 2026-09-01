@@ -1,9 +1,3 @@
-/**
- * the Tester library is actually from the course site material, and the course suppose that i'm working with Eclipse, but i didn't, i'm actually working with vsCode, so do you think this is the main problem , and here is the file of Teseter.jar if you wanted to review it
- * run the upper command on claude, 
- * it will change the tester library to match vsCode, maybe it will work
- */
-
 import tester.Tester;
 
 interface IDocument {
@@ -11,12 +5,18 @@ interface IDocument {
     boolean sameTitle(String otherTitle);
     String getAuthor();
     String getTitle();
+    boolean bigger(String otherAuthor);
 }
 
 
 interface ILoDocument {
+    // Note: I sort by the author's first name, the course requires the sort 
+    //       function to sort by the authors last name, which wasn't included
+    //       an independent attribute of IDocument; So i just sorted by
+    //       the author's first name
     ILoDocument sort();
-
+    ILoDocument sortHelper(ILoDocument sorted);
+    ILoDocument compareChar(IDocument bigChar, ILoDocument sorted);
     // return reversed version from itself
     ILoDocument reverse();
     ILoDocument reverseHelper(ILoDocument reversed);
@@ -29,6 +29,9 @@ interface ILoDocument {
 
     // Remove any doc = currentDoc and produce a new filteredList free from repetition
     ILoDocument filterFromFirst(IDocument currentDoc, ILoDocument newRest);
+    String getFirstAuthor();
+    IDocument getFirst();
+    ILoDocument filterFrom(IDocument doc);
 }
 
 class Book implements IDocument {
@@ -43,20 +46,25 @@ class Book implements IDocument {
         this.publisher = publisher;
         this.bibliography = bibliography;
     }
-
     public boolean sameAuthor(String otherAuthor) {
         return this.author.equals(otherAuthor);
     }
     public boolean sameTitle(String otherTitle) {
         return this.title.equals(otherTitle);
     }
-
     public String getAuthor() {
         return this.author;
     }
     public String getTitle() {
         return this.title;
     }
+    public boolean bigger(String otherAuthor) {
+        if (otherAuthor == "") {
+            return true;
+        }
+        return this.author.toLowerCase().charAt(0) >= otherAuthor.toLowerCase().charAt(0);
+    }
+    
 }
 
 class WikiArticle implements IDocument {
@@ -85,6 +93,9 @@ class WikiArticle implements IDocument {
     public String getTitle() {
         return this.title;
     }
+    public boolean bigger(String otherAuthor) {
+        return this.title.toLowerCase().charAt(0) > otherAuthor.toLowerCase().charAt(0);
+    }
 }
 
 class MtLoDocument implements ILoDocument {
@@ -92,6 +103,12 @@ class MtLoDocument implements ILoDocument {
 
     public ILoDocument sort() {
         return new MtLoDocument();
+    }
+    public ILoDocument sortHelper(ILoDocument sorted) {
+        return sorted;
+    }
+    public ILoDocument compareChar(IDocument bigChar, ILoDocument sorted){
+        return new ConsLoDocument(bigChar, sorted);
     }
 
     public ILoDocument removeDuplicates() {
@@ -110,6 +127,15 @@ class MtLoDocument implements ILoDocument {
     public ILoDocument reverseHelper(ILoDocument reversed) {
         return reversed;
     }
+    public String getFirstAuthor() {
+        return "";
+    }
+    public IDocument getFirst() {
+    return new Book("", "", "", null);
+    }
+    public ILoDocument filterFrom(IDocument doc) {
+        return new MtLoDocument();
+    }
 }
 
 class ConsLoDocument implements ILoDocument {
@@ -122,7 +148,25 @@ class ConsLoDocument implements ILoDocument {
     }
 
     public ILoDocument sort() {
-        return new MtLoDocument();
+        return sortHelper(new MtLoDocument());
+    }
+    public ILoDocument sortHelper(ILoDocument sorted) {
+        sorted = this.compareChar(this.first, sorted);
+        ILoDocument newRest = this.filterFrom(sorted.getFirst());
+        return newRest.sortHelper(sorted);
+    }
+    public ILoDocument compareChar(IDocument bigChar, ILoDocument sorted){
+        // i must make the comparison with the first author in the sorted list not this
+        String otherAuthor = this.getFirstAuthor();
+        if (otherAuthor == "") {
+            return new ConsLoDocument(bigChar, sorted);
+        }
+        else if (bigChar.bigger(otherAuthor)) {
+            return this.rest.compareChar(bigChar, sorted);
+        } else {
+            IDocument newBigChar = this.first;
+            return this.rest.compareChar(newBigChar, sorted);
+        }
     }
 
     public ILoDocument removeDuplicates() {
@@ -153,7 +197,18 @@ class ConsLoDocument implements ILoDocument {
         reversed = new ConsLoDocument(this.first, reversed);
         return this.rest.reverseHelper(reversed);
     }
+   
+    public String getFirstAuthor() {
+        return this.first.getAuthor();
+    }
 
+    public IDocument getFirst() {
+        return this.first;
+    }
+
+    public ILoDocument filterFrom(IDocument doc) {
+        return this.filterFromFirst(doc, new MtLoDocument());
+    }
 }
 
 class ExamplesDocuments {
@@ -209,14 +264,15 @@ class ExamplesDocuments {
                             new ConsLoDocument(book5,
                                     new ConsLoDocument(book6, emtpyBib)))));
 
-    // Correctly alphabetized by author's last name: Asimov, Austen, Christie, Mahfouz, Orwell
-    ILoDocument sortedBooksBib = new ConsLoDocument(book4,
-            new ConsLoDocument(book6,
-                    new ConsLoDocument(book5,
-                            new ConsLoDocument(book1,
-                                    new ConsLoDocument(book3, emtpyBib)))));
-
+    
     // ================= Bibliography lists for removeDuplicates() tests =================
+    // Correctly alphabetized by author's full name: Christie, Orwell, Asimov, Austen, Mahfouz
+    ILoDocument sortedBooksBib = new ConsLoDocument(book5,
+            new ConsLoDocument(book3,
+                    new ConsLoDocument(book4,
+                            new ConsLoDocument(book6,
+                                    new ConsLoDocument(book1, emtpyBib)))));
+
     ILoDocument duplicatesBib = new ConsLoDocument(book2,
             new ConsLoDocument(book2Duplicate,
                     new ConsLoDocument(book1,
@@ -229,7 +285,7 @@ class ExamplesDocuments {
     ILoDocument sameAuthorDifferentTitleBib = new ConsLoDocument(book2, new ConsLoDocument(book3, emtpyBib));
 
     ILoDocument sameTitleDifferentAuthorBib = new ConsLoDocument(book7, new ConsLoDocument(book9, emtpyBib));
-    /** 
+   
     // ================= sort() tests =================
     boolean testSortEmptyBib(Tester t) {
         return t.checkExpect(this.emtpyBib.sort(), new MtLoDocument());
@@ -238,7 +294,7 @@ class ExamplesDocuments {
     boolean testSortSingleBookBib(Tester t) {
         return t.checkExpect(this.oneDocBib.sort(), this.oneDocBib);
     }
-
+    
     boolean testSortAlreadySortedBib(Tester t) {
         return t.checkExpect(this.sortedBooksBib.sort(), this.sortedBooksBib);
     }
@@ -246,7 +302,7 @@ class ExamplesDocuments {
     boolean testSortUnsortedBib(Tester t) {
         return t.checkExpect(this.unsortedBooksBib.sort(), this.sortedBooksBib);
     }
-*/
+    
     // ================= removeDuplicates() tests =================
     boolean testRemoveDuplicatesEmptyBib(Tester t) {
         return t.checkExpect(this.emtpyBib.removeDuplicates(), new MtLoDocument());
@@ -291,6 +347,24 @@ class ExamplesDocuments {
     }
 
     public static void main(String[] args) {
+        // ============================================================
+        // DEBUG MODE: use this when you want to set a breakpoint and
+        // step through a specific method. Tester.runReport is NOT used
+        // here, so there's no 60ms watchdog timeout to fight with the
+        // debugger -- you can pause for as long as you want.
+        //
+        // To use it: comment out the "NORMAL MODE" line below, uncomment
+        // this block, edit the method call to whatever you're currently
+        // debugging, put your breakpoint inside that method, then hit
+        // Debug (F5) on this file/config.
+        // ------------------------------------------------------------
+        // ExamplesDocuments ex = new ExamplesDocuments();
+        // ILoDocument result = ex.sortedBooksBib.sort(); 
+        // System.out.println(result);
+        // ============================================================
+
+        // NORMAL MODE: runs the full test suite (has the 60ms timeout,
+        // fine for a plain run, awkward if you're paused at a breakpoint)
         Tester.runReport(new ExamplesDocuments(), false, false);
     }
 }
