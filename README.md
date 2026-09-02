@@ -6,7 +6,7 @@
 >
 > The main classes of Java files use two modes for running. You can use either mode, or comment out what you don't need.
 
-**[Course Link](https://course.ccs.neu.edu/cs3500f19)**
+**[Course Link](https://course.ccs.neu.edu/cs2510sp22/index.html)**
 
 ---
 
