@@ -1,8 +1,10 @@
-import tester.Tester;
+import tester.*;
 
 interface ILoNumber {
     boolean satisfying();
     boolean satHelper(Conditions conds);
+    boolean strictSatisfy();
+    boolean strictSatHelper(Conditions conds);
 }
 
 class MtLoNumber implements ILoNumber {
@@ -13,6 +15,12 @@ class MtLoNumber implements ILoNumber {
     }
     public boolean satHelper(Conditions conds) {
         return conds.allGood();
+    }
+    public boolean strictSatHelper(Conditions conds) {
+        return conds.allGood();
+    }
+    public boolean strictSatisfy() {
+        return false;
     }
 }
 
@@ -38,6 +46,18 @@ class ConsLoNumber implements ILoNumber{
             return this.rest.satHelper(conds.updateConds(this.first));
         }
     }
+
+    public boolean strictSatisfy() {
+        return strictSatHelper(new Conditions(false, false, false));
+    }
+
+    public boolean strictSatHelper(Conditions conds) {
+       if (conds.allGood()) {
+        return true;
+       } 
+       else return this.rest.strictSatHelper(conds.updateStrictConds(this.first));
+    }
+
 }
 
 class Conditions {
@@ -71,6 +91,35 @@ class Conditions {
         }
         return this;
     }
+
+    public Conditions updateStrictConds(int num) {
+
+        if (!evenUpdated) {
+            this.isEven = checkEven(num);
+            if (isEven) {
+                evenUpdated = isEven;
+                return this;
+            }
+        }
+        if (!PositiveUpdated) {
+            this.isPositiveAndOdd = checkPosAndOdd(num);
+            if (isPositiveAndOdd) {
+                PositiveUpdated = isPositiveAndOdd;
+                return this;
+            }
+        }
+        if (!from5To10Updated) {
+            this.from5To10 = checkRange(num);
+            if (from5To10) {
+                from5To10Updated = from5To10;
+                return this;
+            }
+        } 
+        
+            return this;
+
+    }
+
     private boolean checkEven(int num) {
         return num % 2 == 0;
     }
@@ -86,14 +135,22 @@ class ExamplesNumbers {
     ILoNumber empty = new MtLoNumber();
     ILoNumber satisfyingList = new ConsLoNumber(6, new ConsLoNumber(5, empty));
     ILoNumber unSutisfyingList = new ConsLoNumber(3, new ConsLoNumber(4, empty));
+    ILoNumber satisfyingStrict = new ConsLoNumber(5, new ConsLoNumber(6, new ConsLoNumber(6, empty)));
 
 
     boolean testSatisfyingList(Tester t) {
         return t.checkExpect(satisfyingList.satisfying(), true);
     }
-    boolean testunSutisfyingList(Tester t) {
+    boolean testunsutisfyinglist(Tester t) {
         return t.checkExpect(unSutisfyingList.satisfying(), false);
     }
+    boolean testunsutisfyingStrict(Tester t) {
+        return t.checkExpect(satisfyingList.strictSatisfy(), false);
+    }
+    boolean testsutisfyingStrict(Tester t) {
+        return t.checkExpect(satisfyingStrict.strictSatisfy(), true);
+    }
+
     public static void main(String[] args) {
         // ============================================================
         // DEBUG MODE: use this when you want to set a breakpoint and
@@ -107,7 +164,7 @@ class ExamplesNumbers {
         // Debug (F5) on this file/config.
         // ------------------------------------------------------------
          ExamplesNumbers nums = new ExamplesNumbers();
-         boolean result = nums.satisfyingList.satisfying(); 
+         boolean result = nums.satisfyingStrict.strictSatisfy(); 
          System.out.println(result);
         // ============================================================
 
