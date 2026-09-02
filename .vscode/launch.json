@@ -3,6 +3,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "ExamplesNumbers",
+      "request": "launch",
+      "mainClass": "ExamplesNumbers",
+      "projectName": "cs3500-object-oriented-design_f5f24885"
+    },
+    {
+      "type": "java",
       "name": "ExamplesDocuments",
       "request": "launch",
       "mainClass": "ExamplesDocuments",
