@@ -1,6 +1,6 @@
-# CS3500: Object-Oriented Design
+# Fundamentals II Introduction to Class-based Program Design
 
-**My solutions to the CS3500 course assignments**
+**My solutions to course assignments**
 
 > **Note:** The solutions and naming of the files are not necessarily compatible with the submission system of the course.
 >
@@ -12,7 +12,7 @@
 
 ## Course Progress
 
-This is my personal study schedule for **CS3500: Object-Oriented Design**.
+This is my personal study schedule for **Fundamentals II: Introduction to Class-based Program Design**.
 
 The schedule is organized into weekly units. Each unit contains the lectures, lab/class activity, and assignment that should be completed before moving to the next unit.
 
