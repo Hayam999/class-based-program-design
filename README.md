@@ -26,6 +26,6 @@ The schedule is organized into weekly units. Each unit contains the lectures, la
 
 > **Note:** I've started this course in 2025, stopped in the middle, and came back again in 2026 with a new fresh start.
 
-**Started:** 20,Aug 2026
-**Completed:**
+**Started:** 20,Aug 2026 <br>
+**Completed:** <br>
 **Total Study Time:**

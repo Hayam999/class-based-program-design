@@ -3,6 +3,20 @@
   "configurations": [
     {
       "type": "java",
+      "name": "ExamplesStrings",
+      "request": "launch",
+      "mainClass": "ExamplesStrings",
+      "projectName": "class-based-program-design_d0599225"
+    },
+    {
+      "type": "java",
+      "name": "ExamplesNumbers",
+      "request": "launch",
+      "mainClass": "ExamplesNumbers",
+      "projectName": "class-based-program-design_d0599225"
+    },
+    {
+      "type": "java",
       "name": "ExamplesNumbers",
       "request": "launch",
       "mainClass": "ExamplesNumbers",
@@ -48,7 +62,7 @@
       "name": "Debug Current File",
       "request": "launch",
       "mainClass": "${file}",
-      "projectName": "cs3500-object-oriented-design_f5f24885"
+      "projectName": "class-based-program-design"
     }
   ]
 }
