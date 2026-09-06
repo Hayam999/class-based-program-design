@@ -28,6 +28,14 @@ interface ILoString {
     ILoString handleInterleavingOthers(ILoString originalList, int posTracker, ILoString newList);
     ILoString reverse();
     ILoString reverseHelper(ILoString newList);
+
+    /*
+        merge 2 sorted lists into one list and produce a new sorted list with all items including duplicates.
+        suppose both lists been already sorted, and will not contain empty elements "", as "" will be the end of the list.
+     */
+    ILoString merge(ILoString otherList);
+    ILoString mergeHelper(ILoString otherList, ILoString newList);
+    ILoString handleMergeHelperRecur(ILoString originalList, ILoString newList);
 }
 
 // to represent an empty list of Strings
@@ -82,6 +90,15 @@ class MtLoString implements ILoString {
    }
    public ILoString reverseHelper(ILoString newList) {
     return newList;
+   }
+   public ILoString merge(ILoString otherList) {
+    return otherList;
+   }
+   public ILoString mergeHelper(ILoString otherList, ILoString newList) {
+    return otherList.addLeftOvers(newList);
+   }
+   public ILoString handleMergeHelperRecur(ILoString originalList, ILoString newList) {
+    return originalList.addLeftOvers(newList);
    }
 }
 
@@ -194,6 +211,29 @@ class ConsLoString implements ILoString {
     public ILoString reverseHelper(ILoString newList) {
         return this.rest.reverseHelper(new ConsLoString(this.first, newList));
     }
+
+    public ILoString merge(ILoString otherList) {
+        return this.mergeHelper(otherList, new MtLoString());
+    }
+
+    public ILoString mergeHelper(ILoString otherList, ILoString newList) {
+        String otherFirst =  otherList.getFirst();
+        if (otherFirst == "") {
+            return this.addLeftOvers(newList);
+        }
+
+        if (this.first.toLowerCase().charAt(0) < otherFirst.toLowerCase().charAt(0)) {
+            return this.rest.mergeHelper(otherList, new ConsLoString(this.first, newList));
+        }
+
+        // delegate recurstion to otherList
+        return otherList.handleMergeHelperRecur(this,newList);
+    }
+
+   public ILoString handleMergeHelperRecur(ILoString originalList, ILoString newList) {
+        // assume we will inject this.first and the comparison have been done already.
+        return originalList.mergeHelper(this.rest, new ConsLoString(this.first, newList));
+   }
 }
 
 // to represent examples for lists of strings
@@ -267,6 +307,19 @@ class ExamplesStrings{
                                 new ConsLoString("a",
                                     new ConsLoString("c", new MtLoString()))));
 
+    ILoString originalLitters1 = letters.sort();
+    ILoString otherLitters1 = new ConsLoString("e", new ConsLoString("f", new ConsLoString ("g",
+                                    new ConsLoString("h", new MtLoString()))));
+
+    ILoString originalLitters2 = new ConsLoString("a",
+                                    new ConsLoString("c",
+                                        new ConsLoString("e",
+                                            new ConsLoString("g", new MtLoString()))));
+
+    ILoString otherLitters2 = new ConsLoString("b",
+                                new ConsLoString("d",
+                                    new ConsLoString("f", 
+                                        new ConsLoString("h", new MtLoString()))));
     // ================= interleave() test data =================
 
     // dedicated equal-length input to pair with sortedFruits
@@ -333,39 +386,6 @@ class ExamplesStrings{
                         new ConsLoString("kiwi",
                             new ConsLoString("kiwi", new MtLoString()))));
 
-    
-/**         Those are corner cases tests i've not planned for, you can redesign the method to cover them.
- *        // ---- corner case: one string a prefix of another ----
-            && t.checkExpect(this.prefixes.sort(),
-                    new ConsLoString("cat",
-                        new ConsLoString("catalog",
-                            new ConsLoString("cats", new MtLoString()))))
-   
-    
-            // ---- corner case: empty string sorts first ----
-            && t.checkExpect(this.withEmpty.sort(),
-                    new ConsLoString("",
-                        new ConsLoString("apple",
-                            new ConsLoString("banana", new MtLoString()))));
- 
-            // ---- corner case: mixed case, capitals before lowercase ----
-            && t.checkExpect(this.mixedCase.sort(),
-                    new ConsLoString("Apple",
-                        new ConsLoString("Banana",
-                            new ConsLoString("banana",
-                                new ConsLoString("cherry", new MtLoString())))));
-/*  
-            // ---- single-character strings ----
-            && t.checkExpect(this.letters.sort(),
-                    new ConsLoString("a",
-                        new ConsLoString("b",
-                            new ConsLoString("c",
-                                new ConsLoString("d", new MtLoString())))));
-       // ---- invariant: sorting never changes the total number of
-            //      characters in the list (nothing lost, nothing added) ----
-            && t.checkExpect(this.duplicates.sort().combine().length(),
-                    this.duplicates.combine().length());
-    */
      }
      
 
@@ -415,7 +435,7 @@ class ExamplesStrings{
                             new ConsLoString("cherry",
                                 new ConsLoString("three", new MtLoString())))))));
     }
-/* 
+
     // this list longer (4 vs 2) -> 2 leftover elements from this at the end
     boolean testInterleaveThisLonger(Tester t) {
         return t.checkExpect(this.fourLetters.interleave(this.twoLetters),
@@ -488,11 +508,53 @@ class ExamplesStrings{
                                     new ConsLoString("c",
                                         new ConsLoString("c", new MtLoString())))))))));
     }
-*/
+
+    boolean testdifferentInterleavingAndMerging(Tester t) {
+        return (t.checkExpect(originalLitters1.interleave(otherLitters1), new ConsLoString("a", 
+            new ConsLoString("e",
+                new ConsLoString("b",
+                    new ConsLoString("f",
+                        new ConsLoString("c",
+                            new ConsLoString("g",
+                                new ConsLoString("d",
+                                    new ConsLoString("h", new MtLoString())))))))))) &&
+         (t.checkExpect(originalLitters1.sort().merge(otherLitters1.sort()),
+                    new ConsLoString("a",
+                        new ConsLoString("b",
+                            new ConsLoString("c",
+                            new ConsLoString("d",
+                            new ConsLoString("e",
+                                new ConsLoString("f",
+                                    new ConsLoString("g", new ConsLoString ("h",
+                                        new MtLoString()))))))))));
+    }
+    boolean testSameInterleavingAndMerging(Tester t) {
+        return t.checkExpect(originalLitters2.interleave(otherLitters2),
+                                new ConsLoString("a",
+                                    new ConsLoString("b",
+                                        new ConsLoString("c",
+                                            new ConsLoString("d",
+                                                new ConsLoString("e", 
+                                                    new ConsLoString("f",
+                                                        new ConsLoString("g",
+                                                            new ConsLoString("h", 
+                                                            new MtLoString()))))))))) &&
+                                                            
+                t.checkExpect(originalLitters2.sort().merge(otherLitters2.sort()),
+                                new ConsLoString("a",
+                                    new ConsLoString("b",
+                                        new ConsLoString("c",
+                                            new ConsLoString("d",
+                                                new ConsLoString("e", 
+                                                    new ConsLoString("f",
+                                                        new ConsLoString("g",
+                                                            new ConsLoString("h", 
+                                                            new MtLoString())))))))));
+    }
     public static void main(String[] args) {
     
         ExamplesStrings strings = new ExamplesStrings();
-        boolean result = strings.sortedMary.isSorted();
+        ILoString result = strings.originalLitters2.merge(strings.otherLitters2);
          System.out.println(result);
         // ============================================================
 
