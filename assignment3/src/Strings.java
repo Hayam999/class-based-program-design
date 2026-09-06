@@ -42,6 +42,10 @@ interface ILoString {
      */
     boolean isDuplicatedList();
     boolean isDuplicatedHelper(int tracker, String prevFirst);
+
+    boolean isPalindromeList();
+    boolean isPalindromeHelper(ILoString reveredList);
+    boolean handlePalindromeRecur(ILoString original);
   
 
 }
@@ -114,6 +118,16 @@ class MtLoString implements ILoString {
    }
    public boolean isDuplicatedHelper(int tracker, String prevFirst) {
     return true;
+   }
+
+   public boolean isPalindromeList() {
+    return false;
+   }
+   public boolean isPalindromeHelper(ILoString reversedList) {
+    return true;
+   }
+   public boolean handlePalindromeRecur(ILoString original) {
+        return original.isPalindromeHelper(this);
    }
    
 }
@@ -262,6 +276,21 @@ class ConsLoString implements ILoString {
             return this.rest.isDuplicatedHelper( tracker + 1, prevFirst);
         }
         return false;
+   }
+   public boolean isPalindromeList() {
+    return isPalindromeHelper(this.reverse());
+   }
+   public boolean isPalindromeHelper(ILoString reversedList) {
+        ILoString firstAndLast = new ConsLoString(this.first,
+            new ConsLoString(reversedList.getFirst(), new MtLoString()));
+        if (firstAndLast.isDuplicatedList()) {
+            return reversedList. handlePalindromeRecur(this.rest);
+        } 
+        return false;
+   }
+
+   public boolean handlePalindromeRecur(ILoString original) {
+        return original.isPalindromeHelper(this.rest);
    }
    
 }
@@ -615,6 +644,24 @@ class ExamplesStrings{
         t.checkExpect(uniqe.isDuplicatedList(), false) &&
         t.checkExpect(tailDup.isDuplicatedList(), false) &&
         t.checkExpect(notDup.isDuplicatedList(), false);
+    }
+
+    ILoString palinList = new ConsLoString("Stay",
+        new ConsLoString("Calm", 
+            new ConsLoString("So",
+                new ConsLoString("Calm", new ConsLoString("Stay", new MtLoString())))));
+
+    ILoString plainTripleinTheMiddle =  new ConsLoString("Stay",
+        new ConsLoString("Calm", 
+            new ConsLoString("Calm",
+                new ConsLoString("Calm", new ConsLoString("Stay", new MtLoString())))));
+
+    boolean testIsPlaindromeList(Tester t) {
+        return t.checkExpect(palinList.isPalindromeList(), true) &&
+        t.checkExpect(isDuplicated.isPalindromeList(), false) &&
+        t.checkExpect(plainTripleinTheMiddle.isPalindromeList(), true) &&
+        t.checkExpect(originalLitters1.isPalindromeList(), false) &&
+        t.checkExpect(duplicates.isPalindromeList(), false);
     }
     public static void main(String[] args) {
     
