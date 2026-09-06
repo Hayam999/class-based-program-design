@@ -14,6 +14,20 @@ interface ILoString {
     ILoString removeBiggest(String biggest);
     ILoString removeBiggestHelper(ILoString accList, String biggest, boolean once);
     boolean sameFirst(String str);
+    boolean isSorted();
+    
+    /* 
+        produce a list where the first, third, fifth...
+        elements are from this list, and the second, fourth, sixth....
+        elements are from the given list;
+        Any leftover elements is at the end
+    **/ 
+    ILoString interleave(ILoString otherList);
+    ILoString interleaveHelper(ILoString otheStrings, int posTracker, ILoString newList);
+    ILoString addLeftOvers(ILoString newList);
+    ILoString handleInterleavingOthers(ILoString originalList, int posTracker, ILoString newList);
+    ILoString reverse();
+    ILoString reverseHelper(ILoString newList);
 }
 
 // to represent an empty list of Strings
@@ -48,6 +62,27 @@ class MtLoString implements ILoString {
     public boolean sameFirst(String str) {
         return false;
     }
+    public boolean isSorted() {
+        return true;
+    }
+    public ILoString interleave(ILoString otherList) {
+        return otherList;
+    }
+    public ILoString interleaveHelper(ILoString otheStrings, int posTracker, ILoString newList) {
+        return otheStrings.addLeftOvers(newList);
+    }
+   public ILoString addLeftOvers(ILoString newList) {
+    return newList.reverse();
+   }
+   public ILoString handleInterleavingOthers(ILoString originalList, int posTracker, ILoString newList) {
+        return originalList.addLeftOvers(newList);
+   }
+   public ILoString reverse() {
+    return new MtLoString();
+   }
+   public ILoString reverseHelper(ILoString newList) {
+    return newList;
+   }
 }
 
 // to represent a nonempty list of Strings
@@ -113,8 +148,6 @@ class ConsLoString implements ILoString {
     }
 
 
-
-
     public boolean sameFirst(String str) {
         String lowerFirst = this.first.toLowerCase();
         String lowerStr = str.toLowerCase();
@@ -123,6 +156,43 @@ class ConsLoString implements ILoString {
             return true;
         }
         return false;
+    }
+
+    public boolean isSorted() {
+        String secondFirst = this.rest.getFirst();
+        if (secondFirst == "") {
+            return true;
+        }
+        if (this.first.toLowerCase().charAt(0) > (secondFirst.toLowerCase().charAt(0))) {
+            return false;
+        } else {
+            return this.rest.isSorted();
+        }
+    }
+    public ILoString interleave (ILoString otherString) {
+        return this.interleaveHelper(otherString, 1, new MtLoString());
+    }
+    public ILoString interleaveHelper(ILoString otherStrings, int posTracker, ILoString newList) {
+          if (posTracker % 2 == 0) {
+            // delegate recursion call to otherStrings. to avoid calling rest & first on an empty 
+            return otherStrings.handleInterleavingOthers(this, posTracker, newList);
+        } else {
+            return this.rest.interleaveHelper(otherStrings, posTracker + 1, new ConsLoString(this.first, newList));
+            }
+        
+    }
+    public ILoString addLeftOvers(ILoString newList) {
+        return this.rest.addLeftOvers(new ConsLoString(this.first, newList));
+    }
+
+    public ILoString handleInterleavingOthers(ILoString originalList, int posTracker, ILoString newList) {
+        return originalList.interleaveHelper(this.rest, posTracker + 1, new ConsLoString(this.first, newList));
+    }
+    public ILoString reverse() {
+        return reverseHelper(new MtLoString());
+    }
+    public ILoString reverseHelper(ILoString newList) {
+        return this.rest.reverseHelper(new ConsLoString(this.first, newList));
     }
 }
 
@@ -197,6 +267,20 @@ class ExamplesStrings{
                                 new ConsLoString("a",
                                     new ConsLoString("c", new MtLoString()))));
 
+    // ================= interleave() test data =================
+
+    // dedicated equal-length input to pair with sortedFruits
+    ILoString numbers = new ConsLoString("one",
+                            new ConsLoString("two",
+                                new ConsLoString("three", new MtLoString())));
+
+    // a clean, dedicated shorter/longer pair (2 vs 4) for leftover checks
+    ILoString twoLetters = new ConsLoString("x", new ConsLoString("y", new MtLoString()));
+    ILoString fourLetters = new ConsLoString("p",
+                                new ConsLoString("q",
+                                    new ConsLoString("r",
+                                        new ConsLoString("s", new MtLoString()))));
+
     
     // test the method combine for the lists of Strings
     boolean testCombine(Tester t){
@@ -248,7 +332,10 @@ class ExamplesStrings{
                     new ConsLoString("kiwi",
                         new ConsLoString("kiwi",
                             new ConsLoString("kiwi", new MtLoString()))));
-/**        // ---- corner case: one string a prefix of another ----
+
+    
+/**         Those are corner cases tests i've not planned for, you can redesign the method to cover them.
+ *        // ---- corner case: one string a prefix of another ----
             && t.checkExpect(this.prefixes.sort(),
                     new ConsLoString("cat",
                         new ConsLoString("catalog",
@@ -280,12 +367,132 @@ class ExamplesStrings{
                     this.duplicates.combine().length());
     */
      }
- 
+     
 
+    boolean testIsSorted(Tester t) {
+        return
+        t.checkExpect(mary.isSorted(), false) &&
+        t.checkExpect(sortedMary.isSorted(), true) &&
+        t.checkExpect(allSame.isSorted(), true) &&
+        t.checkExpect(duplicates.isSorted(), false);
+
+    }
+
+    // ================= interleave() tests =================
+    // Semantics assumed: result[0] = this[0], result[1] = given[0], result[2] = this[1], ...
+    // and once either list runs out, the entire remaining tail of the OTHER list
+    // is appended unchanged (in its original order) at the end.
+
+    // both lists empty -> empty result
+    boolean testInterleaveBothEmpty(Tester t) {
+        return t.checkExpect(this.mtStrings.interleave(this.mtStrings), new MtLoString());
+    }
+ 
+    // this list empty, given non-empty -> result is exactly the given list
+    boolean testInterleaveThisEmpty(Tester t) {
+        return t.checkExpect(this.mtStrings.interleave(this.oneWord), this.oneWord);
+    }
+
+    // this list non-empty, given empty -> result is exactly this list
+    boolean testInterleaveGivenEmpty(Tester t) {
+        return t.checkExpect(this.oneWord.interleave(this.mtStrings), this.oneWord);
+    }
+
+    // one element in each list
+    boolean testInterleaveSingleElements(Tester t) {
+        return t.checkExpect(
+            this.oneWord.interleave(new ConsLoString("world", new MtLoString())),
+            new ConsLoString("hello", new ConsLoString("world", new MtLoString())));
+    }
+ 
+    // equal-length lists -> no leftovers at all
+    boolean testInterleaveEqualLength(Tester t) {
+        return t.checkExpect(this.sortedFruits.interleave(this.numbers),
+            new ConsLoString("apple",
+                new ConsLoString("one",
+                    new ConsLoString("banana",
+                        new ConsLoString("two",
+                            new ConsLoString("cherry",
+                                new ConsLoString("three", new MtLoString())))))));
+    }
+/* 
+    // this list longer (4 vs 2) -> 2 leftover elements from this at the end
+    boolean testInterleaveThisLonger(Tester t) {
+        return t.checkExpect(this.fourLetters.interleave(this.twoLetters),
+            new ConsLoString("p",
+                new ConsLoString("x",
+                    new ConsLoString("q",
+                        new ConsLoString("y",
+                            new ConsLoString("r",
+                                new ConsLoString("s", new MtLoString())))))));
+    }
+
+    // given list longer (2 vs 4) -> 2 leftover elements from given at the end
+    boolean testInterleaveGivenLonger(Tester t) {
+        return t.checkExpect(this.twoLetters.interleave(this.fourLetters),
+            new ConsLoString("x",
+                new ConsLoString("p",
+                    new ConsLoString("y",
+                        new ConsLoString("q",
+                            new ConsLoString("r",
+                                new ConsLoString("s", new MtLoString())))))));
+    }
+
+    // bigger example: this longer by 2 (5 vs 3), reusing existing example data
+    boolean testInterleaveThisLongerBigGap(Tester t) {
+        return t.checkExpect(this.mary.interleave(this.sortedFruits),
+            new ConsLoString("Mary ",
+                new ConsLoString("apple",
+                    new ConsLoString("had ",
+                        new ConsLoString("banana",
+                            new ConsLoString("a ",
+                                new ConsLoString("cherry",
+                                    new ConsLoString("little ",
+                                        new ConsLoString("lamb.", new MtLoString())))))))));
+    }
+
+    // mirror of the above: given longer by 2 (3 vs 5)
+    boolean testInterleaveGivenLongerBigGap(Tester t) {
+        return t.checkExpect(this.sortedFruits.interleave(this.mary),
+            new ConsLoString("apple",
+                new ConsLoString("Mary ",
+                    new ConsLoString("banana",
+                        new ConsLoString("had ",
+                            new ConsLoString("cherry",
+                                new ConsLoString("a ",
+                                    new ConsLoString("little ",
+                                        new ConsLoString("lamb.", new MtLoString())))))))));
+    }
+
+    // duplicates on both sides must all survive, in their original relative order
+    boolean testInterleaveWithDuplicates(Tester t) {
+        return t.checkExpect(this.duplicates.interleave(this.allSame),
+            new ConsLoString("banana",
+                new ConsLoString("kiwi",
+                    new ConsLoString("apple",
+                        new ConsLoString("kiwi",
+                            new ConsLoString("banana",
+                                new ConsLoString("kiwi",
+                                    new ConsLoString("apple", new MtLoString()))))))));
+    }
+
+    // a list interleaved with itself
+    boolean testInterleaveWithSelf(Tester t) {
+        return t.checkExpect(this.letters.interleave(this.letters),
+            new ConsLoString("d",
+                new ConsLoString("d",
+                    new ConsLoString("b",
+                        new ConsLoString("b",
+                            new ConsLoString("a",
+                                new ConsLoString("a",
+                                    new ConsLoString("c",
+                                        new ConsLoString("c", new MtLoString())))))))));
+    }
+*/
     public static void main(String[] args) {
     
         ExamplesStrings strings = new ExamplesStrings();
-        ILoString result = strings.mary.sort(); 
+        boolean result = strings.sortedMary.isSorted();
          System.out.println(result);
         // ============================================================
 
