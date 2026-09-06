@@ -36,6 +36,14 @@ interface ILoString {
     ILoString merge(ILoString otherList);
     ILoString mergeHelper(ILoString otherList, ILoString newList);
     ILoString handleMergeHelperRecur(ILoString originalList, ILoString newList);
+
+    /*
+        checks if the elements 1,2 are the same and 3,4 same ... etc
+     */
+    boolean isDuplicatedList();
+    boolean isDuplicatedHelper(int tracker, String prevFirst);
+  
+
 }
 
 // to represent an empty list of Strings
@@ -100,6 +108,14 @@ class MtLoString implements ILoString {
    public ILoString handleMergeHelperRecur(ILoString originalList, ILoString newList) {
     return originalList.addLeftOvers(newList);
    }
+
+   public boolean isDuplicatedList() {
+    return false;
+   }
+   public boolean isDuplicatedHelper(int tracker, String prevFirst) {
+    return true;
+   }
+   
 }
 
 // to represent a nonempty list of Strings
@@ -234,6 +250,20 @@ class ConsLoString implements ILoString {
         // assume we will inject this.first and the comparison have been done already.
         return originalList.mergeHelper(this.rest, new ConsLoString(this.first, newList));
    }
+
+   public boolean isDuplicatedList() {
+        return this.rest.isDuplicatedHelper(1, this.first);
+   }
+   public boolean isDuplicatedHelper(int tracker, String prevFirst) {
+        if (tracker % 2 == 0) {
+            return this.rest.isDuplicatedHelper(tracker + 1, this.first);
+        }
+        if (this.first == prevFirst) {
+            return this.rest.isDuplicatedHelper( tracker + 1, prevFirst);
+        }
+        return false;
+   }
+   
 }
 
 // to represent examples for lists of strings
@@ -550,6 +580,41 @@ class ExamplesStrings{
                                                         new ConsLoString("g",
                                                             new ConsLoString("h", 
                                                             new MtLoString())))))))));
+
+    }
+
+    ILoString isDuplicated = new ConsLoString("art",
+        new ConsLoString("art",
+            new ConsLoString("Music",
+                new ConsLoString("Music",
+                    new ConsLoString("peace",
+                        new ConsLoString("peace", new MtLoString())
+                    )
+                )
+            )
+        )
+    );
+    ILoString notDup = new ConsLoString("live", isDuplicated);
+    ILoString uniqe = new ConsLoString("Don't", new ConsLoString("just", 
+        new ConsLoString("be there", new MtLoString())));
+
+    ILoString tailDup = new ConsLoString("art",
+            new ConsLoString("Music",
+                new ConsLoString("Music",
+                    new ConsLoString("peace",
+                        new ConsLoString("peace", new ConsLoString ("tail", new MtLoString())
+                    )
+                )
+            )
+        )
+    );
+
+    boolean testIsDuplicatedList(Tester t) {
+        return t.checkExpect(duplicates.isDuplicatedList(), false) &&
+        t.checkExpect(isDuplicated.isDuplicatedList(), true) &&
+        t.checkExpect(uniqe.isDuplicatedList(), false) &&
+        t.checkExpect(tailDup.isDuplicatedList(), false) &&
+        t.checkExpect(notDup.isDuplicatedList(), false);
     }
     public static void main(String[] args) {
     
