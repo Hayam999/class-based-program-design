@@ -1,4 +1,4 @@
- import tester.*;                // The tester library
+import tester.*;                // The tester library
 import javalib.worldimages.*;   // images, like RectangleImage or OverlayImages
 import javalib.funworld.*;      // the abstract World class and the big-bang library
 import java.awt.Color;          // general colors (as triples of red,green,blue values)
@@ -9,6 +9,7 @@ interface ITree {
   WorldImage draw();
   boolean isDrooping();
   ITree combine(int leftLength, int rightLength, double leftTheta, double rightTheta, ITree otherTree);
+  double run();
  }
  
 class Leaf implements ITree {
@@ -29,6 +30,9 @@ class Leaf implements ITree {
   public ITree combine(int leftLength, int rightLength, double leftTheta, double rightTheta, ITree otherTree) {
     return this;
   }
+  public double run() {
+    return this.size;
+  }
 
 }
  
@@ -47,13 +51,17 @@ class Stem implements ITree {
   }
   public WorldImage draw() {
     double thetaInRadians = fromDegreesToRadians();
-    int x = calculateX(thetaInRadians);
-    int y = calculateY(thetaInRadians);
+    double x = calculateX(thetaInRadians);
+    double y = calculateY(thetaInRadians);
+    double halfLenght = length / 2.0;
 
-    WorldImage stem = new LineImage(new Posn(x, y), Color.BLACK);
+    double tipX =  (halfLenght * Math.cos(thetaInRadians));
+    double tipY =  (halfLenght * Math.sin(thetaInRadians));
 
-    // TODO connect the stem to the rest of the tree
-    return stem;
+    WorldImage stem = new LineImage(new Posn((int) x, (int) y), Color.BLACK);
+    WorldImage restOfTree = this.tree.draw();
+    
+    return new OverlayImage(restOfTree, stem.movePinhole(-tipX, -tipY)).movePinhole(tipX * 2, tipY * 2);
   }
   public boolean isDrooping() {
     return false;
@@ -64,16 +72,19 @@ class Stem implements ITree {
 
   // returns the value of this.theta in radians
   private double fromDegreesToRadians() {
-    return  Math.round(this.theta * (Math.PI / 180));
+    return  this.theta * (Math.PI / 180);
   }
 
-  private int calculateX(double thetaInRadians) {
-    return (int) Math.round(this.length * Math.cos(thetaInRadians));
+  private double calculateX(double thetaInRadians) {
+    return  this.length * Math.cos(thetaInRadians);
   }
 
-  private int calculateY(double thetaInRadians) {
-    return (int) Math.round(this.length * Math.sin(thetaInRadians));
-  } 
+  private double calculateY(double thetaInRadians) {
+    return  this.length * Math.sin(thetaInRadians);
+  }
+  public double run() {
+    return calculateX(fromDegreesToRadians());
+  }
 }
  
 class Branch implements ITree {
@@ -97,7 +108,9 @@ class Branch implements ITree {
   }
 
   public WorldImage draw() {
-   return new LineImage(new Posn(40, 40), Color.RED); 
+   ITree leftStem = new Stem(this.leftLength, this.leftTheta, this.left);
+   ITree rightStem = new Stem(this.rightLength, this.rightTheta, this.right);
+   return new OverlayImage(rightStem.draw(), leftStem.draw());
   }
   public boolean isDrooping() {
     return false;
@@ -105,19 +118,40 @@ class Branch implements ITree {
   public ITree combine(int leftLength, int rightLength, double leftTheta, double rightTheta, ITree otherTree) {
     return this;
   }
+  public double run() {
+   ITree leftStem = new Stem(this.leftLength, this.leftTheta, this.left);
+   return  leftStem.run();
+  }
 }
 
 
 class ExamplesTree {
-  
+    // left stems have more than 90 degree angles
     ITree redLeaf = new Leaf(15, Color.RED);
-    ITree verticalStem = new Stem(30, 90, redLeaf);
+    ITree greenLeaf = new Leaf(15, Color.GREEN);
+    ITree blueLeaf = new Leaf(14, Color.BLUE);
+    ITree verticalStem = new Stem(120, 100, redLeaf);
+    ITree bendToLeftStem = new Stem(30, 135, greenLeaf);
+    ITree bendToRightStem = new Stem(30, 45, blueLeaf);
+    ITree horizontalStem = new Stem(45, 0, redLeaf);
+    ITree leftOfTree1 = new Stem(30, 45, redLeaf);
+    ITree rightOfTree1 = new Stem(30, 135, greenLeaf);
+    ITree tree1 = new Branch(30, 30, 45, 135, new Leaf(15, Color.BLUE), new Leaf(10, Color.RED));
+    ITree tree2 = new Branch(30, 30, 65, 115, new Leaf(15, Color.GREEN), new Leaf(8, Color.ORANGE));
+
+    ITree growingTree1 = new Stem(40, 90, tree1);
+    ITree otherTree1 = new Branch(30, 30, 135, 40, new Leaf(10, Color.RED), new Leaf(15, Color.BLUE));
+
+
     boolean testDrawTree(Tester t) {
       WorldCanvas c = new WorldCanvas(500, 500);
       WorldScene s = new WorldScene(500, 500);
-      return c.drawScene(s.placeImageXY(verticalStem.draw(), 250, 250))
+      return c.drawScene(s.placeImageXY(growingTree1.draw(), 250, 250))
           && c.show();
-    } 
+    }
+
+
+
         //ITree myTree =  new Branch(30, 30, 135, 40, new Leaf(10, Color.RED), new Leaf(15, Color.BLUE))
     public static void main(String[] args) {
         // ============================================================
@@ -134,8 +168,8 @@ class ExamplesTree {
          
         ExamplesTree trees = new ExamplesTree();
         trees.testDrawTree(new Tester());   // runs with no watchdog, window can actually open
-        WorldImage result = trees.verticalStem.draw();
-        System.out.println(result);
+       // WorldImage result = trees.tree1.draw();
+       // System.out.println(result);
         // ============================================================
 
         // NORMAL MODE: runs the full test suite (has the 60ms timeout,
