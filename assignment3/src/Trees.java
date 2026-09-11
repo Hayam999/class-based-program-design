@@ -10,6 +10,7 @@ interface ITree {
   boolean isDrooping();
   ITree combine(int leftLength, int rightLength, double leftTheta, double rightTheta, ITree otherTree);
   double run();
+  ITree rotateTree(double rotationDegree);
  }
  
 class Leaf implements ITree {
@@ -28,10 +29,16 @@ class Leaf implements ITree {
     return false;
   }
   public ITree combine(int leftLength, int rightLength, double leftTheta, double rightTheta, ITree otherTree) {
-    return this;
+    
+    double lr = 90 - (180 - leftTheta);
+    double rr = 90 - (180 - rightTheta);
+    return new Branch(leftLength, rightLength, leftTheta, rightTheta, this.rotateTree(lr), otherTree.rotateTree(rr));
   }
   public double run() {
     return this.size;
+  }
+  public ITree rotateTree(double rotationDegree) {
+    return this;
   }
 
 }
@@ -64,10 +71,18 @@ class Stem implements ITree {
     return new OverlayImage(restOfTree, stem.movePinhole(-tipX, -tipY)).movePinhole(tipX * 2, tipY * 2);
   }
   public boolean isDrooping() {
-    return false;
+    if (Math.sin(fromDegreesToRadians()) < 0) {
+      return true;
+    }
+    return this.tree.isDrooping();
   }
   public ITree combine(int leftLength, int rightLength, double leftTheta, double rightTheta, ITree otherTree) {
-    return this;
+    double lr = 90 - (180 - leftTheta);
+    double rr = 90 - (180 - rightTheta);
+    return new Branch(leftLength, rightLength, leftTheta, rightTheta, this.rotateTree(lr), otherTree.rotateTree(rr));
+  }
+  public ITree rotateTree(double rotationDegree) {
+    return new Stem(this.length, this.theta + rotationDegree, this.tree.rotateTree(rotationDegree));
   }
 
   // returns the value of this.theta in radians
@@ -108,15 +123,33 @@ class Branch implements ITree {
   }
 
   public WorldImage draw() {
-   ITree leftStem = new Stem(this.leftLength, this.leftTheta, this.left);
-   ITree rightStem = new Stem(this.rightLength, this.rightTheta, this.right);
-   return new OverlayImage(rightStem.draw(), leftStem.draw());
+    ITree leftStem = leftStem();
+    ITree rightStem = rightStem();
+    return new OverlayImage(rightStem.draw(), leftStem.draw());
   }
+  private ITree leftStem() {
+    return  new Stem(this.leftLength, this.leftTheta, this.left);
+  }
+  private ITree rightStem() {
+   return new Stem(this.rightLength, this.rightTheta, this.right);
+  }
+
+
   public boolean isDrooping() {
-    return false;
+    if (leftStem().isDrooping()) {
+      return true;
+    }
+    return  rightStem().isDrooping();
+  }
+  public ITree rotateTree(double rotationDegree) {
+
+    return new Branch(leftLength, rightLength, this.leftTheta + rotationDegree, this.rightTheta + rotationDegree, left.rotateTree(rotationDegree), right.rotateTree(rotationDegree));
   }
   public ITree combine(int leftLength, int rightLength, double leftTheta, double rightTheta, ITree otherTree) {
-    return this;
+    double lr = 90 - (180 - leftTheta);
+    double rr = 90 - (180 - rightTheta);
+    return new Branch(leftLength, rightLength, leftTheta, rightTheta, this.rotateTree(lr), otherTree.rotateTree(rr));
+
   }
   public double run() {
    ITree leftStem = new Stem(this.leftLength, this.leftTheta, this.left);
@@ -138,19 +171,30 @@ class ExamplesTree {
     ITree rightOfTree1 = new Stem(30, 135, greenLeaf);
     ITree tree1 = new Branch(30, 30, 45, 135, new Leaf(15, Color.BLUE), new Leaf(10, Color.RED));
     ITree tree2 = new Branch(30, 30, 65, 115, new Leaf(15, Color.GREEN), new Leaf(8, Color.ORANGE));
+    ITree drooping1 = new Branch(45, 35, 270, 120, redLeaf, greenLeaf);
+    ITree drooping2 = new Stem(40, 270, redLeaf);
+    ITree droopingMinus = new Stem(100, -20, greenLeaf);
+    
 
     ITree growingTree1 = new Stem(40, 90, tree1);
     ITree otherTree1 = new Branch(30, 30, 135, 40, new Leaf(10, Color.RED), new Leaf(15, Color.BLUE));
+    ITree combine1 = tree1.combine(40, 50, 150, 30, tree2);
 
 
     boolean testDrawTree(Tester t) {
       WorldCanvas c = new WorldCanvas(500, 500);
       WorldScene s = new WorldScene(500, 500);
-      return c.drawScene(s.placeImageXY(growingTree1.draw(), 250, 250))
+      return c.drawScene(s.placeImageXY(combine1.draw(), 250, 250))
           && c.show();
     }
 
-
+    boolean testIsDrooping(Tester t) {
+      return  t.checkExpect(tree1.isDrooping(), false) &&
+             t.checkExpect(horizontalStem.isDrooping(), false) &&
+             t.checkExpect(drooping1.isDrooping(), true) &&
+             t.checkExpect(drooping2.isDrooping(), true) &&
+             t.checkExpect(droopingMinus.isDrooping(), true); 
+    }
 
         //ITree myTree =  new Branch(30, 30, 135, 40, new Leaf(10, Color.RED), new Leaf(15, Color.BLUE))
     public static void main(String[] args) {
@@ -168,8 +212,8 @@ class ExamplesTree {
          
         ExamplesTree trees = new ExamplesTree();
         trees.testDrawTree(new Tester());   // runs with no watchdog, window can actually open
-       // WorldImage result = trees.tree1.draw();
-       // System.out.println(result);
+        boolean result = trees.drooping2.isDrooping();
+        System.out.println(result);
         // ============================================================
 
         // NORMAL MODE: runs the full test suite (has the 60ms timeout,
