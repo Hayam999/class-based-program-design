@@ -11,6 +11,7 @@ interface ITree {
   ITree combine(int leftLength, int rightLength, double leftTheta, double rightTheta, ITree otherTree);
   double run();
   ITree rotateTree(double rotationDegree);
+  double getWidth();
  }
  
 class Leaf implements ITree {
@@ -39,6 +40,9 @@ class Leaf implements ITree {
   }
   public ITree rotateTree(double rotationDegree) {
     return this;
+  }
+  public double getWidth() {
+    return this.size;
   }
 
 }
@@ -100,6 +104,9 @@ class Stem implements ITree {
   public double run() {
     return calculateX(fromDegreesToRadians());
   }
+  public double getWidth() {
+    return this.tree.getWidth();
+  }
 }
  
 class Branch implements ITree {
@@ -133,8 +140,6 @@ class Branch implements ITree {
   private ITree rightStem() {
    return new Stem(this.rightLength, this.rightTheta, this.right);
   }
-
-
   public boolean isDrooping() {
     if (leftStem().isDrooping()) {
       return true;
@@ -155,6 +160,20 @@ class Branch implements ITree {
    ITree leftStem = new Stem(this.leftLength, this.leftTheta, this.left);
    return  leftStem.run();
   }
+  public double getWidth() {
+        double innerAngle = this.leftTheta - this.rightTheta;
+        double leftSq = this.leftLength * this.leftLength;
+        double rightSq = this.rightLength * this.rightLength;
+        double crossTerm = 2 * this.leftLength * this.rightLength
+                            * Math.cos(fromDegreesToRadians(innerAngle));
+        double currentWidth = Math.sqrt(leftSq + rightSq - crossTerm);
+   
+
+        return currentWidth + this.left.getWidth() + this.right.getWidth();
+  }
+  private double fromDegreesToRadians(double theta) {
+    return  theta * (Math.PI / 180);
+  }
 }
 
 
@@ -169,8 +188,8 @@ class ExamplesTree {
     ITree horizontalStem = new Stem(45, 0, redLeaf);
     ITree leftOfTree1 = new Stem(30, 45, redLeaf);
     ITree rightOfTree1 = new Stem(30, 135, greenLeaf);
-    ITree tree1 = new Branch(30, 30, 45, 135, new Leaf(15, Color.BLUE), new Leaf(10, Color.RED));
-    ITree tree2 = new Branch(30, 30, 65, 115, new Leaf(15, Color.GREEN), new Leaf(8, Color.ORANGE));
+    ITree tree1 = new Branch(30, 30, 135, 40, new Leaf(10, Color.RED), new Leaf(15, Color.BLUE));
+    ITree tree2 = new Branch(30, 30, 115, 65, new Leaf(15, Color.GREEN), new Leaf(8, Color.ORANGE));
     ITree drooping1 = new Branch(45, 35, 270, 120, redLeaf, greenLeaf);
     ITree drooping2 = new Stem(40, 270, redLeaf);
     ITree droopingMinus = new Stem(100, -20, greenLeaf);
