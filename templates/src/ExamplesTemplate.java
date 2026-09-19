@@ -4,6 +4,10 @@ import tester.*;
 
 class Examples {
 
+    boolean testMethod(Tester t) {
+        return t.checkExpect(null, null);
+    }
+
     public static void main(String[] args) {
         // ============================================================
         // DEBUG MODE: use this when you want to set a breakpoint and
