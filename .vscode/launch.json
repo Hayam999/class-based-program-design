@@ -3,6 +3,20 @@
   "configurations": [
     {
       "type": "java",
+      "name": "ExamplesTask",
+      "request": "launch",
+      "mainClass": "ExamplesTask",
+      "projectName": "class-based-program-design_d0599225"
+    },
+    {
+      "type": "java",
+      "name": "ExamplesMayBeInt",
+      "request": "launch",
+      "mainClass": "ExamplesMayBeInt",
+      "projectName": "class-based-program-design_d0599225"
+    },
+    {
+      "type": "java",
       "name": "ExamplesBooks",
       "request": "launch",
       "mainClass": "ExamplesBooks",
