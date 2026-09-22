@@ -3,6 +3,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "ExamplesBagel",
+      "request": "launch",
+      "mainClass": "ExamplesBagel",
+      "projectName": "class-based-program-design_d0599225"
+    },
+    {
+      "type": "java",
       "name": "ExamplesTask",
       "request": "launch",
       "mainClass": "ExamplesTask",
