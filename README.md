@@ -21,7 +21,7 @@ The schedule is organized into weekly units. Each unit contains the lectures, la
 | 1    | **Lectures 1–3**   | **Lab 1**      | **Assignment 1** |       23, Aug |     23, Aug |
 | 2    | **Lectures 4–6**   | **Lab 2**      | **Assignment 2** |       27, Aug |     28, Aug |
 | 3    | **Lectures 7–9**   | **Lab 3**      | **Assignment 3** |       31, Aug |     11, Sep |
-| 4    | **Lectures 10–12** | **Lab 4**      | **Assignment 3** |       25, Sep |             |
+| 4    | **Lectures 10–12** | **Lab 4**      | **Assignment 4** |       25, Sep |     23, Sep |
 
 ## Course Completion
 
@@ -29,4 +29,3 @@ The schedule is organized into weekly units. Each unit contains the lectures, la
 
 **Started:** 20,Aug 2026 <br>
 **Completed:** <br>
-**Total Study Time:**
