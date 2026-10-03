@@ -35,5 +35,6 @@ The schedule is organized into weekly units. Each unit contains the lectures, la
 
 | Week | Vedios         | Assignment         | Expected Time | Actual Time |
 | ---- | -------------- | ------------------ | ------------: | ----------: |
-| 1    | **Videos 1–2** | **Assignment 1–2** |       30, Sep |     25, Sep |
-| 2    | **Videos 2–3** | **Assignment 2–3** |        2, Oct |             |
+| 1    | **Videos 2–3** | **Assignment 1–2** |       30, Sep |     25, Sep |
+| 2    | **Videos 4–5** | **Assignment 2–3** |        2, Oct |      2, Oct |
+| 3    | **Videos 6–7** | **Assignment 4–6** |        9, Oct |             |

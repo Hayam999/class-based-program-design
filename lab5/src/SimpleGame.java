@@ -8,9 +8,7 @@ import javalib.worldcanvas.WorldCanvas;
 
 interface ILoCircle {
   ILoCircle moveAll();
-  ILoCircle moveAllHelper(ILoCircle newList);
   ILoCircle removeOffScreen(int w, int h);
-  ILoCircle removeOffScreenHelper(int w, int h, ILoCircle cleanList);
   WorldScene placeAll(WorldScene world);
 }
 
@@ -78,16 +76,8 @@ class MtLoCircle implements ILoCircle {
     return  this;
   }
 
-  public ILoCircle moveAllHelper(ILoCircle newList) {
-    return newList;
-  }
-
   public ILoCircle removeOffScreen(int w, int h) {
     return this;
-  }
-
-  public ILoCircle removeOffScreenHelper(int w, int h, ILoCircle cleanList){
-    return cleanList;
   }
 
   public WorldScene placeAll(WorldScene world) {
@@ -104,22 +94,15 @@ class ConsLoCircle implements ILoCircle {
     this.rest = rest;
   }
   public ILoCircle moveAll() {
-    return this.moveAllHelper(new MtLoCircle());
+    return new ConsLoCircle(this.first.move(), this.rest.moveAll());
   }
 
-  public ILoCircle moveAllHelper(ILoCircle newList) {
-    return this.rest.moveAllHelper(new ConsLoCircle(this.first.move(), newList));
-  }
 
   public ILoCircle removeOffScreen(int w, int h) {
-    return this.removeOffScreenHelper(w, h, new MtLoCircle());
-  }
-  public ILoCircle removeOffScreenHelper(int w, int h, ILoCircle cleanList){
     if (this.first.isOffScreen(w, h)) {
-      return this.rest.removeOffScreenHelper(w, h, cleanList);
-    }
-    else {
-      return  this.rest.removeOffScreenHelper(w, h, new ConsLoCircle(this.first, cleanList));
+      return this.rest.removeOffScreen(w, h);
+    } else {
+      return new ConsLoCircle(this.first, this.rest.removeOffScreen(w, h));
     }
   }
 
@@ -171,10 +154,10 @@ class ExamplesSimpleGame {
  
   WorldScene blank = new WorldScene(500, 300);
  
-    boolean testDrawTree(Tester t) {
-      WorldCanvas c = new WorldCanvas(500, 500);
-      return c.drawScene( blank.placeImageXY(cInside.draw(), 100, 100)) && c.show();
-    }
+  // boolean testDrawTree(Tester t) {
+  //    WorldCanvas c = new WorldCanvas(500, 500);
+  //    return c.drawScene(cInside.place(blank)) && c.show();
+  //  }  
   // ============================================================
   // MyPosn.add
   // ============================================================
@@ -186,7 +169,7 @@ class ExamplesSimpleGame {
         && t.checkExpect(origin.add(origin), new MyPosn(0, 0))
         && t.checkExpect(new MyPosn(-3, -4).add(new MyPosn(-1, -1)), new MyPosn(-4, -5));
   }
-
+ 
   // add must not mutate either operand
   boolean testPosnAddNoMutation(Tester t) {
     MyPosn a = new MyPosn(1, 2);
@@ -241,7 +224,7 @@ class ExamplesSimpleGame {
     return t.checkExpect(c, new Circle(new MyPosn(1, 1), new MyPosn(2, 2), 5))
         && t.checkExpect(moved, new Circle(new MyPosn(3, 3), new MyPosn(2, 2), 5));
   }
- 
+
   // ============================================================
   // Circle.isOffScreen (delegates to position)
   // ============================================================
@@ -255,14 +238,13 @@ class ExamplesSimpleGame {
         // same circle, smaller screen -> now offscreen
         && t.checkExpect(cInside.isOffScreen(50, 50), true);
   }
- 
   // a circle that leaves the screen after enough ticks
   boolean testCircleLeavesAfterTicks(Tester t) {
     Circle c = new Circle(new MyPosn(480, 100), new MyPosn(10, 0), 10);
     return t.checkExpect(c.isOffScreen(500, 300), false)
         && t.checkExpect(c.move().move().move().isOffScreen(500, 300), true);
   }
- 
+  
   // ============================================================
   // Circle.draw
   // NOTE: adjust the color below if your circle uses a different one.
@@ -277,16 +259,17 @@ class ExamplesSimpleGame {
   // ============================================================
   // Circle.place
   // ============================================================
-  boolean testCirclePlace(Tester t) {
-    return t.checkExpect(cInside.place(blank),
-        blank.placeImageXY(cInside.draw(), 100, 100))
-        && t.checkExpect(cInside2.place(blank),
-           blank.placeImageXY(cInside2.draw(), 200, 50))
-       && t.checkExpect(cInside.place(cInside2.place(blank)),
-          blank.placeImageXY(cInside2.draw(), 200, 50)
-              .placeImageXY(cInside.draw(), 100, 100));
-  }
  
+{/**
+  boolean testCirclePlace(Tester t) {
+    return t.checkExpect(cInside.place(blank), blank.placeImageXY(cInside.draw(), 100, 100))
+       &&  t.checkExpect(cInside2.place(blank),
+           blank.placeImageXY(cInside2.draw(), 200, 50));
+     ///  && t.checkExpect(cInside.place(cInside2.place(blank)),
+     //     blank.placeImageXY(cInside2.draw(), 200, 50)
+     //         .placeImageXY(cInside.draw(), 100, 100));
+  } //
+   */} 
   // ============================================================
   // ILoCircle.moveAll  (every circle moved, order preserved)
   // ============================================================
@@ -295,16 +278,18 @@ class ExamplesSimpleGame {
     ILoCircle threeMoved = new ConsLoCircle(cInside.move(),
         new ConsLoCircle(cInside2.move(),
             new ConsLoCircle(cInside3.move(), empty)));
-    return t.checkExpect(empty.moveAll(), empty);
-  //      && t.checkExpect(one.moveAll(), oneMoved);
-     //   && t.checkExpect(three.moveAll(), threeMoved)
-     //  && t.checkExpect(three.moveAll().moveAll(),
-     //      new ConsLoCircle(cInside.move().move(),
-     //           new ConsLoCircle(cInside2.move().move(),
-     //               new ConsLoCircle(cInside3.move().move(), empty))));
+
+    return t.checkExpect(empty.moveAll(), empty)
+        && t.checkExpect(one.moveAll(),oneMoved)
+        && t.checkExpect(three.moveAll(), threeMoved)
+       && t.checkExpect(three.moveAll().moveAll(),
+           new ConsLoCircle(cInside.move().move(),
+                new ConsLoCircle(cInside2.move().move(),
+                    new ConsLoCircle(cInside3.move().move(), empty))));
   }
+  
  
-  {/** 
+ 
   // moveAll must not change the original list
   boolean testMoveAllNoMutation(Tester t) {
     ILoCircle moved = three.moveAll();
@@ -349,7 +334,7 @@ class ExamplesSimpleGame {
                 .placeImageXY(cInside2.draw(), 200, 50)
                 .placeImageXY(cInside3.draw(), 300, 250));
   }
- 
+
   // ============================================================
   // Combined tick: move, then remove offscreen (what onTick will do)
   // ============================================================
@@ -360,7 +345,6 @@ class ExamplesSimpleGame {
     return t.checkExpect(start.moveAll().removeOffScreen(500, 300),
         new ConsLoCircle(stay.move(), empty));
   }
-  */} 
         // ============================================================
     public static void main(String[] args) {
         // ============================================================
@@ -374,19 +358,16 @@ class ExamplesSimpleGame {
         // debugging, put your breakpoint inside that method, then hit
         // Debug (F5) on this file/config.
         // ------------------------------------------------------------
-        // Examples nums = new Examples();
         // boolean result = nums.satisfyingStrict.strictSatisfy(); 
-        // System.out.println(result);
+        ExamplesSimpleGame game = new ExamplesSimpleGame();
+        WorldScene result = game.cInside.place(game.blank);   // runs with no watchdog, window can actually open
+         System.out.println(result);
         // ============================================================
 
         // NORMAL MODE: runs the full test suite (has the 60ms timeout,
         // fine for a plain run, awkward if you're paused at a breakpoint)
-        ExamplesSimpleGame game = new ExamplesSimpleGame();
-      // game.cInside.place(game.blank);   // runs with no watchdog, window can actually open
-         ILoCircle oneMoved = game.one.moveAll();
-         System.out.println(oneMoved);
-     //   game.testDrawTree(new Tester());
+      //  game.testDrawTree(new Tester());
       
-        Tester.runReport(new ExamplesSimpleGame(), false, false);
+       Tester.runReport(new ExamplesSimpleGame(), false, false);
     }
 }
