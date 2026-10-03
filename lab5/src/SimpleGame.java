@@ -10,6 +10,7 @@ interface ILoCircle {
   ILoCircle moveAll();
   ILoCircle removeOffScreen(int w, int h);
   WorldScene placeAll(WorldScene world);
+  int length();
 }
 
 class MyPosn extends Posn {
@@ -51,7 +52,9 @@ class Circle {
     this.velocity = velocity;
     this.size = size;
   }
-  
+ Circle(int x, int y) {
+  this(new MyPosn(x, y), new MyPosn(1,0), 30);
+ }
   public WorldImage draw() {
     return  new CircleImage(this.size, OutlineMode.SOLID, Color.GREEN);
   }
@@ -83,6 +86,10 @@ class MtLoCircle implements ILoCircle {
   public WorldScene placeAll(WorldScene world) {
     return world;
   }
+
+  public int length() {
+    return 0;
+  }
 }
 
 class ConsLoCircle implements ILoCircle {
@@ -109,8 +116,61 @@ class ConsLoCircle implements ILoCircle {
   public WorldScene placeAll(WorldScene world) {
     return this.rest.placeAll(this.first.place(world));
   }
+
+  public int length() {
+    return 1 + this.rest.length();
+  }
 }
 
+class CirclesGame extends World {
+  int width;
+  int height;
+  int circlesToEnd;
+  ILoCircle circles;
+
+
+  CirclesGame(int width, int height, int circlesToEnd, ILoCircle circles) {
+    this.width = width;
+    this.height = height;
+    this.circlesToEnd = circlesToEnd;
+    this.circles = circles;
+  }
+
+  CirclesGame(int circlesToEnd) {
+    this(500, 500, circlesToEnd, new MtLoCircle());
+   }
+
+  CirclesGame(ILoCircle circles, int circlesToEnd) {
+    this(500, 500, circlesToEnd, circles);
+  }
+ 
+  public WorldScene makeScene() {
+    return this.circles.placeAll(new WorldScene(width, height));
+  }
+  public World onTick() {
+    ILoCircle movedCircles = this.circles.moveAll();
+    ILoCircle newCircles = movedCircles.removeOffScreen(width, height);
+    int difference = movedCircles.length() - newCircles.length();
+    int newCirclesToEnd = this.circlesToEnd - difference;
+    return new CirclesGame(this.width, this.height, newCirclesToEnd, newCircles);
+
+  }  
+  public World onMouseClicked(Posn pos) {
+    return new CirclesGame(this.circles = new ConsLoCircle(new Circle(pos.x, pos.y), circles), this.circlesToEnd);
+  }
+
+  public WorldScene makeAFinalScene() {
+
+    return new WorldScene(width, height).placeImageXY(new TextImage("Out Of Circles", Color.BLUE), width/2, height/2);
+  }
+  public WorldEnd worldEnds() {
+    if (this.circlesToEnd <= 0) {
+      return new WorldEnd(true, this.makeAFinalScene());
+    } else {
+      return new WorldEnd(false, this.makeScene());
+    }
+  }
+}
 
 class ExamplesSimpleGame {
   // ---------- MyPosn data ----------
@@ -345,6 +405,15 @@ class ExamplesSimpleGame {
     return t.checkExpect(start.moveAll().removeOffScreen(500, 300),
         new ConsLoCircle(stay.move(), empty));
   }
+
+  boolean testBigBang(Tester t) {
+    CirclesGame w = new CirclesGame(10);
+    int worldWidth = 500;
+    int worldHeight = 500;
+    double tickRate = 1.0/28.0;
+    return w.bigBang(worldWidth, worldHeight, tickRate);
+  }
+
         // ============================================================
     public static void main(String[] args) {
         // ============================================================
@@ -359,14 +428,14 @@ class ExamplesSimpleGame {
         // Debug (F5) on this file/config.
         // ------------------------------------------------------------
         // boolean result = nums.satisfyingStrict.strictSatisfy(); 
-        ExamplesSimpleGame game = new ExamplesSimpleGame();
-        WorldScene result = game.cInside.place(game.blank);   // runs with no watchdog, window can actually open
-         System.out.println(result);
+          ExamplesSimpleGame game = new ExamplesSimpleGame();
+       // WorldScene result = game.cInside.place(game.blank);   // runs with no watchdog, window can actually open
+       //  System.out.println(result);
         // ============================================================
 
         // NORMAL MODE: runs the full test suite (has the 60ms timeout,
         // fine for a plain run, awkward if you're paused at a breakpoint)
-      //  game.testDrawTree(new Tester());
+        game.testBigBang(new Tester());
       
        Tester.runReport(new ExamplesSimpleGame(), false, false);
     }
