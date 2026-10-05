@@ -1,17 +1,55 @@
+import java.awt.Color;
+
 import javalib.funworld.WorldScene;
+import javalib.worldimages.*;
 
 interface ILoShip {
    WorldScene placeAll(WorldScene scene);
 }
 
-public interface Ship {    
-}
-class FightShip implements Ship{   
+public interface Ship {
+    WorldScene place(WorldScene scene); 
+    WorldImage draw();
 }
 
-class EnemyShip implements Ship {
-    EnemyShip() {}
+abstract class AShip implements Ship {
+    MyPosn pos;
+    int size;
+
+    AShip(MyPosn pos, int size) {
+        this.pos = pos;
+        this.size = size;
+    }
+    
+    public WorldScene place(WorldScene scene) {
+        return scene.placeImageXY(this.draw(), this.pos.getX(), this.pos.getY());
+    }
 }
+
+class FightShip extends AShip{
+
+    FightShip(MyPosn pos, int size) {
+        super(pos, size);
+    }
+
+    public WorldImage draw() {
+        return new CircleImage(this.size, OutlineMode.SOLID, Color.GREEN);
+    }
+}
+
+
+class EnemyShip extends AShip {
+
+    EnemyShip(MyPosn pos, int size) {
+        super(pos, size);
+    }
+
+    public WorldImage draw() {
+        return new CircleImage(this.size, OutlineMode.SOLID, Color.RED);
+    }
+}
+
+
 
 class MtLoShip implements ILoShip {
     MtLoShip() {}
@@ -31,6 +69,34 @@ class ConsLoShip implements ILoShip {
     } 
 
     public WorldScene placeAll(WorldScene scene) {
-        return scene;
+        return this.rest.placeAll(this.first.place(scene));
     }
+}
+
+class MyPosn extends Posn {
+ 
+  // standard constructor
+  MyPosn(int x, int y) {
+    super(x, y);
+  }
+ 
+  // constructor to convert from a Posn to a MyPosn
+  MyPosn(Posn p) {
+    this(p.x, p.y);
+  }
+
+  public MyPosn add(MyPosn p) {
+    return new MyPosn(p.x + this.x , p.y + this.y);
+  }
+
+  public boolean isOffScreen(int w, int h) {
+    return this.x < 0 || this.y < 0 || this.x >= w || this.y >= h;
+  }
+
+  public int getX() {
+    return this.x;
+  }
+  public int getY() {
+    return this.y;
+  }
 }

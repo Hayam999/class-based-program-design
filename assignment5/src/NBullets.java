@@ -22,9 +22,9 @@ class NBullets extends World {
 
     NBullets(int bulletsToEnd) {
         this.bulletsToEnd = bulletsToEnd;
-        this.ships = new ConsLoShip(new FightShip(), new MtLoShip());
         this.width = 1500;
-        this.height = 1500;
+        this.height = 900;
+        this.ships = new ConsLoShip(new FightShip(new MyPosn(this.width/2,  this.height - 15), 30), new MtLoShip());
         this.destroyedShips = 0;
     }
 
@@ -43,7 +43,7 @@ class NBullets extends World {
         WorldImage info =  textInfo.overlayImages(whiteBox);
 
 
-        return new WorldScene(width, height).placeImageXY(info, w, h/2);
+        return new WorldScene(width, height).placeImageXY(info, w, h);
     }
 
     public WorldEnd worldEnds() {
@@ -66,7 +66,7 @@ class ExamplesNBullets {
     boolean testBigBang(Tester t) {
         NBullets w = new NBullets(10);
         int worldWidth = 1500;
-        int worldHeight = 1500;
+        int worldHeight = 900;
         double tickRate = 1.0/28.0;
         return w.bigBang(worldWidth, worldHeight, tickRate);
     }
