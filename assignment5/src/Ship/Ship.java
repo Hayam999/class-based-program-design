@@ -158,36 +158,10 @@ class ConsLoShip implements ILoShip {
             return this;
         }
         else {
-            // TODO refactor this piece of code into a seperated method and test it
-            //     as we may be entered an infinite loop;
-            int topBoundry = height/6;
-            int bottomBoundry = height - topBoundry;
             Random randObj = new Random();
-            int y = topBoundry;
-    
-            while (y <= topBoundry) {
-                y = randObj.nextInt(bottomBoundry);
-            }
-            
-            int leftBoundry = width - (width / 6);
-            int rightBoundry = width / 6;
-            int x = rightBoundry;
-            while (x <= leftBoundry) {
-                x = randObj.nextInt(rightBoundry);
-            }
-            
-            int xVelocity;
-            if (randObj.nextInt(10) <=5 ) {
-                xVelocity = -1;
-            } else {
-                xVelocity = 1;
-            }
-
-            MyPosn pos = new MyPosn(x, y);
-            MyPosn velo = new MyPosn(xVelocity, 0);     
-            Ship newShip = new EnemyShip(pos, velo, 15);
+            Utils util = new Utils();
+            Ship newShip = util.spawnShip(width, height, randObj);
             ILoShip newShips = new ConsLoShip(newShip, this);
-
             return newShips.spawn(rand - 1, width, height);
         }
     }
@@ -197,8 +171,73 @@ class ConsLoShip implements ILoShip {
     }
 }
 
+class Utils {
+    Utils() {}
 
+    public Ship spawnShip(int width, int height, Random randObj) {
+        int topBoundry = Math.round(height/8);
+        int bottomBoundry = height - topBoundry;
+        int y = topBoundry;
+
+        while (y <= topBoundry) {
+            y = randObj.nextInt(bottomBoundry);
+        }
+        
+        int leftBoundry = Math.round(width - (width / 50));
+        int rightBoundry = width / 50;
+        int x = rightBoundry;
+        while (x <= rightBoundry) {
+            x = randObj.nextInt(leftBoundry);
+        }
+        
+        int xVelocity;
+        if (randObj.nextInt(10) <=5 ) {
+            xVelocity = -1;
+        } else {
+            xVelocity = 1;
+        }
+        MyPosn pos = new MyPosn(x, y);
+        MyPosn velo = new MyPosn(xVelocity, 0);     
+        return  new EnemyShip(pos, velo, 15);
+
+    }
+}
 class ExamplesShip {
+    Utils util = new Utils();
+    int topBoundry = 500/6;
+    int bottomBoundry = 500 - topBoundry;
+    Random randObj = new Random(2);
+    int y = topBoundry;
+    {
+    while (y <= topBoundry) {
+            y = randObj.nextInt(bottomBoundry);
+    }
+    }
+
+    int leftBoundry = Math.round(1500 - (1500 / 50));
+    int rightBoundry = 1500 / 50;
+    int x = rightBoundry;
+    {
+    while (x <= rightBoundry) {
+        x = randObj.nextInt(leftBoundry);
+    }
+
+    }
+
+    int xVelocity = 0; 
+    { 
+      if (randObj.nextInt(10) <=5 ) {
+            xVelocity = -1;
+        } else {
+            xVelocity = 1;
+        }
+    }
+    boolean testSpawnShip(Tester t) {
+        return t.checkExpect(y > topBoundry, true)
+            && t.checkExpect(x > rightBoundry, true)
+            && t.checkExpect(util.spawnShip(1500, 500, randObj), 
+                             new EnemyShip(new MyPosn(x, y), new MyPosn(xVelocity, 0), 15));
+    }
     
     public static void main(String[] args) {
 
