@@ -4,6 +4,9 @@ import javalib.funworld.WorldScene;
 import javalib.worldimages.*;
 
 interface ILoShip {
+   ILoShip spawn(int rand);
+   ILoShip moveAll();
+   ILoShip removeOffScreen();
    WorldScene placeAll(WorldScene scene);
 }
 
@@ -24,6 +27,7 @@ abstract class AShip implements Ship {
     public WorldScene place(WorldScene scene) {
         return scene.placeImageXY(this.draw(), this.pos.getX(), this.pos.getY());
     }
+
 }
 
 class FightShip extends AShip{
@@ -57,6 +61,10 @@ class MtLoShip implements ILoShip {
     public WorldScene placeAll(WorldScene scene) {
         return scene;
     }
+
+    public ILoShip spawn(int rand) {
+        return new MtLoShip();
+    }
 }
 
 class ConsLoShip implements ILoShip {
@@ -70,6 +78,13 @@ class ConsLoShip implements ILoShip {
 
     public WorldScene placeAll(WorldScene scene) {
         return this.rest.placeAll(this.first.place(scene));
+    }
+
+    public ILoShip spawn(int rand) {
+        // generate a random number
+        // create call spawn helper to create the ships until that number is 0
+        // add the new ships to the current ships and return them together
+
     }
 }
 

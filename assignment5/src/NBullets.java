@@ -3,39 +3,66 @@ import javalib.worldimages.*;   // images, like RectangleImage or OverlayImages
 import javalib.funworld.*;      // the abstract World class and the big-bang library
 import java.awt.Color;          // general colors (as triples of red,green,blue values)
 import java.awt.Rectangle;
-
 import javax.print.attribute.standard.NumberUp;
-
-// and predefined colors (Color.RED, Color.GRAY, etc.)
+import java.util.Random;
 import javalib.worldcanvas.WorldCanvas;
 
 
 
 class NBullets extends World {
-    int width;
-    int height;
+    int WIDTH = 1500;
+    int HEIGHT = 900;
+    int FixedReq = 10;
+    int spawnRate;
     int destroyedShips;
-    ILoBullet bullets;
     int bulletsToEnd;
+    ILoBullet bullets;
     ILoShip ships;
+    Random rand;
 
-
-    NBullets(int bulletsToEnd) {
+    NBullets(int spawnRate, int destroyedShips, int bulletsToEnd, ILoBullet bullets, ILoShip ships) {
+        this.spawnRate = spawnRate;
+        this.destroyedShips = destroyedShips;
         this.bulletsToEnd = bulletsToEnd;
-        this.width = 1500;
-        this.height = 900;
-        this.ships = new ConsLoShip(new FightShip(new MyPosn(this.width/2,  this.height - 15), 30), new MtLoShip());
-        this.destroyedShips = 0;
+        this.bullets = bullets;
+        this.ships = ships;
+        this.rand = new Random();
     }
 
+    
+    NBullets(int bulletsToEnd, Random rand) {
+        this.rand = rand;
+        this.destroyedShips = 0;
+        this.spawnRate = 0;
+        this.bulletsToEnd = bulletsToEnd;
+        this.ships = new ConsLoShip(new FightShip(new MyPosn(this.WIDTH/2,  this.HEIGHT - 15), 30), new MtLoShip());
+    }
+    
+    NBullets(int bulletsToEnd) {
+        this(bulletsToEnd, new Random());
+    }
     public WorldScene makeScene() {
         return this.ships.placeAll(this.drawInfo());
     }
 
+    public World onTick() {
+        if (spawnRate == FixedReq) {
+            int randomNum = 0;
+            while (randomNum == 0) {   
+               randomNum = this.rand.nextInt(10);
+            }
+            ILoShip newShips = this.ships.spawn(randomNum);
+            return new NBullets(0, this.destroyedShips,
+                 this.bulletsToEnd, this.bullets, newShips);
+        } else {
+            return new NBullets(this.spawnRate + 1, this.destroyedShips,
+                 this.bulletsToEnd, this.bullets, this.ships);
+        }
+      }  
     // Draws how many bullets are left and how many ships have been destroyed so far.
     public WorldScene drawInfo() {
-        int w = this.width/10;
-        int h = this.height/20;
+        int w = WIDTH/10;
+        int h = HEIGHT/20;
         WorldImage whiteBox = new RectangleImage(w, h, OutlineMode.OUTLINE, Color.WHITE);
         WorldImage bulletsText = new TextImage("Bullets Remained: " + String.valueOf(this.bulletsToEnd), 25, FontStyle.BOLD, Color.BLACK);
         WorldImage destroyedShipsText = new TextImage("Destroyed Ships: " + String.valueOf(this.destroyedShips), 25, FontStyle.BOLD, Color.BLACK);
@@ -43,7 +70,7 @@ class NBullets extends World {
         WorldImage info =  textInfo.overlayImages(whiteBox);
 
 
-        return new WorldScene(width, height).placeImageXY(info, w, h);
+        return new WorldScene(WIDTH, HEIGHT).placeImageXY(info, w, h);
     }
 
     public WorldEnd worldEnds() {
@@ -55,7 +82,7 @@ class NBullets extends World {
     }
 
     public WorldScene makeAFinalScene() {
-        return new WorldScene(width, height).placeImageXY(new TextImage("Game End", Color.RED), width/2, width/2);
+        return new WorldScene(this.WIDTH, this.HEIGHT).placeImageXY(new TextImage("Game End", Color.RED), width/2, width/2);
     }
 
 }
