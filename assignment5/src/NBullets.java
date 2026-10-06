@@ -12,7 +12,7 @@ import javalib.worldcanvas.WorldCanvas;
 class NBullets extends World {
     int WIDTH = 1500;
     int HEIGHT = 900;
-    int FixedReq = 10;
+    int FixedReq = 50;
     int spawnRate;
     int destroyedShips;
     int bulletsToEnd;
@@ -35,7 +35,8 @@ class NBullets extends World {
         this.destroyedShips = 0;
         this.spawnRate = 0;
         this.bulletsToEnd = bulletsToEnd;
-        this.ships = new ConsLoShip(new FightShip(new MyPosn(this.WIDTH/2,  this.HEIGHT - 15), 30), new MtLoShip());
+        this.ships = new ConsLoShip(new FightShip(
+            new MyPosn(this.WIDTH/2,  this.HEIGHT - 15), new MyPosn(1, 0), 30), new MtLoShip());
     }
     
     NBullets(int bulletsToEnd) {
@@ -49,9 +50,9 @@ class NBullets extends World {
         if (spawnRate == FixedReq) {
             int randomNum = 0;
             while (randomNum == 0) {   
-               randomNum = this.rand.nextInt(10);
+               randomNum = this.rand.nextInt(6);
             }
-            ILoShip newShips = this.ships.spawn(randomNum);
+            ILoShip newShips = this.ships.spawn(randomNum,WIDTH, HEIGHT);
             return new NBullets(0, this.destroyedShips,
                  this.bulletsToEnd, this.bullets, newShips);
         } else {
@@ -82,7 +83,8 @@ class NBullets extends World {
     }
 
     public WorldScene makeAFinalScene() {
-        return new WorldScene(this.WIDTH, this.HEIGHT).placeImageXY(new TextImage("Game End", Color.RED), width/2, width/2);
+        return new WorldScene(this.WIDTH, this.HEIGHT).placeImageXY(
+            new TextImage("Game End", Color.RED), WIDTH/2, WIDTH/2);
     }
 
 }
