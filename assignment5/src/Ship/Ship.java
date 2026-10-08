@@ -79,11 +79,11 @@ class FightShip extends AShip{
         MyPosn newPos;
         MyPosn newVelo;
         if (currentX >= widht) {
-            newPos = new MyPosn(currentX - 1, currentY);
-            newVelo = new MyPosn(-1, 0);
+            newPos = new MyPosn(currentX - 10, currentY);
+            newVelo = new MyPosn(-2, 0);
         } else if (currentX <= 0) {
-            newPos = new MyPosn(currentX + 1, currentY);
-            newVelo = new MyPosn(1, 0);
+            newPos = new MyPosn(currentX + 10, currentY);
+            newVelo = new MyPosn(2, 0);
         } else {
             newPos = new MyPosn(currentX + this.velocity.getX(), currentY);
             newVelo = this.velocity;
@@ -110,10 +110,10 @@ class EnemyShip extends AShip {
         MyPosn newVelo;
         if (currentX >= widht) {
             newPos = new MyPosn(currentX - 1, currentY);
-            newVelo = new MyPosn(-1, 0);
+            newVelo = new MyPosn(-2, 0);
         } else if (currentX <= 0) {
             newPos = new MyPosn(currentX + 1, currentY);
-            newVelo = new MyPosn(1, 0);
+            newVelo = new MyPosn(2, 0);
         } else {
             newPos = new MyPosn(currentX + this.velocity.getX(), currentY);
             newVelo = this.velocity;
@@ -192,9 +192,9 @@ class Utils {
         
         int xVelocity;
         if (randObj.nextInt(10) <=5 ) {
-            xVelocity = -1;
+            xVelocity = -2;
         } else {
-            xVelocity = 1;
+            xVelocity = 2;
         }
         MyPosn pos = new MyPosn(x, y);
         MyPosn velo = new MyPosn(xVelocity, 0);     

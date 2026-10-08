@@ -33,7 +33,7 @@ class NBullets extends World {
         this.spawnRate = 0;
         this.bulletsToEnd = bulletsToEnd;
         this.ships = new ConsLoShip(new FightShip(
-            new MyPosn(this.WIDTH/2,  this.HEIGHT - 15), new MyPosn(1, 0), 30), new MtLoShip());
+            new MyPosn(this.WIDTH/2,  this.HEIGHT - 15), new MyPosn(2, 0), 30), new MtLoShip());
     }
     
     NBullets(int bulletsToEnd) {
@@ -44,6 +44,7 @@ class NBullets extends World {
     }
 
     public World onTick() {
+        // check wether to produce new enemies;
         if (spawnRate == FixedReq) {
             int randomNum = 0;
             while (randomNum == 0) {   
@@ -51,10 +52,10 @@ class NBullets extends World {
             }
             ILoShip newShips = this.ships.spawn(randomNum,WIDTH, HEIGHT);
             return new NBullets(0, this.destroyedShips,
-                 this.bulletsToEnd, this.bullets, newShips);
+                 this.bulletsToEnd, this.bullets, newShips.moveAll(WIDTH));
         } else {
             return new NBullets(this.spawnRate + 1, this.destroyedShips,
-                 this.bulletsToEnd, this.bullets, this.ships);
+                 this.bulletsToEnd, this.bullets, this.ships.moveAll(WIDTH));
         }
       }  
     // Draws how many bullets are left and how many ships have been destroyed so far.
