@@ -8,6 +8,7 @@ import javalib.worldimages.*;
     ILoBullet removeOffScreen(int widht, int height);
     WorldScene placeAll(WorldScene scene);
     boolean collided(MyPosn pos);
+    ILoBullet replaceCollision(ILoShip ships);
 }
 public class Bullet {
     MyPosn pos;
@@ -39,6 +40,10 @@ public class Bullet {
     public boolean collided(MyPosn pos) {
         return this.pos.checkCollision(pos);
     }
+
+    public boolean collidsAny(ILoShip ships) {
+        return ships.collided(this.pos);
+    }
 }
 
 
@@ -64,6 +69,10 @@ class MtLoBullet implements ILoBullet {
 
     public boolean collided(MyPosn pos) {
         return false;
+    }
+
+    public ILoBullet replaceCollision(ILoShip ships) {
+        return new MtLoBullet();
     }
 
 }
@@ -104,5 +113,14 @@ class ConsLoBullet implements ILoBullet {
             return true;
         }
         else return this.rest.collided(pos);
+    }
+
+    public ILoBullet replaceCollision(ILoShip ships) {
+        if (this.first.collidsAny(ships)) {
+            return this.rest.replaceCollision(ships);
+        }
+        else {
+            return new ConsLoBullet(this.first, this.rest.replaceCollision(ships));
+        }
     }
 }

@@ -51,7 +51,8 @@ class NBullets extends World {
 
     public World onTick() {
         ILoShip newShips = this.spawn().removeCollision(this.bullets).moveAll(WIDTH);
-        ILoBullet newBullets = this.bullets.removeOffScreen(WIDTH, HEIGHT).moveAll(); 
+        ILoBullet newBullets =
+         this.bullets.removeOffScreen(WIDTH, HEIGHT).replaceCollision(this.ships).moveAll(); 
 
         return new NBullets(this.newSpawnRate(), this.destroyedShips,
                  this.bulletsToEnd, newBullets, newShips,this.fighter.move(WIDTH));  
