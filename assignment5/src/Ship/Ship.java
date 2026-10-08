@@ -8,6 +8,7 @@ interface ILoShip {
    ILoShip spawn(int rand, int width, int height);
    ILoShip moveAll(int width);
    WorldScene placeAll(WorldScene scene);
+   ILoShip removeCollision(ILoBullet bullets);
 }
 
 public interface Ship {
@@ -15,35 +16,9 @@ public interface Ship {
     WorldImage draw();
     Ship move(int width);
     int getX();
+    boolean collided(ILoBullet bullets);
 }
 
-class MyPosn extends Posn {
- 
-  // standard constructor
-  MyPosn(int x, int y) {
-    super(x, y);
-  }
- 
-  // constructor to convert from a Posn to a MyPosn
-  MyPosn(Posn p) {
-    this(p.x, p.y);
-  }
-
-  public MyPosn add(MyPosn p) {
-    return new MyPosn(p.x + this.x , p.y + this.y);
-  }
-
-  public boolean isOffScreen(int w, int h) {
-    return this.x < 0 || this.y < 0 || this.x >= w || this.y >= h;
-  }
-
-  public int getX() {
-    return this.x;
-  }
-  public int getY() {
-    return this.y;
-  }
-}
 
 abstract class AShip implements Ship {
     MyPosn pos;
@@ -64,7 +39,9 @@ abstract class AShip implements Ship {
         return this.pos.getX();
     }
 
-    
+    public boolean collided(ILoBullet bullets) {
+        return bullets.collided(this.pos);
+    }
 
 }
 
@@ -143,6 +120,10 @@ class MtLoShip implements ILoShip {
     public ILoShip moveAll(int width) {
         return new MtLoShip();
     }
+
+    public ILoShip removeCollision(ILoBullet bullets) {
+        return new MtLoShip();
+    }
 }
 
 class ConsLoShip implements ILoShip {
@@ -173,6 +154,16 @@ class ConsLoShip implements ILoShip {
 
     public ILoShip moveAll(int width) {
         return new ConsLoShip(this.first.move(width), this.rest.moveAll(width));
+    }
+
+    public ILoShip removeCollision(ILoBullet bullets) {
+        if (this.first.collided(bullets)) {
+            return this.rest.removeCollision(bullets);
+        }
+        else {
+            return new ConsLoShip(this.first,
+                 this.rest.removeCollision(bullets));
+        }
     }
 }
 

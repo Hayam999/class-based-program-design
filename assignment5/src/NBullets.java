@@ -50,23 +50,11 @@ class NBullets extends World {
     }
 
     public World onTick() {
-        // check wether to produce new enemies;
-        if (spawnRate == FixedReq) {
-            int randomNum = 0;
-            while (randomNum == 0) {   
-               randomNum = this.rand.nextInt(6);
-            }
-            ILoShip newShips = this.ships.spawn(randomNum,WIDTH, HEIGHT);
-            return new NBullets(0, this.destroyedShips,
-                 this.bulletsToEnd,
-                  this.bullets.removeOffScreen(WIDTH, HEIGHT).moveAll(), newShips.moveAll(WIDTH),
-                this.fighter.move(WIDTH));
-        } else {
-            return new NBullets(this.spawnRate + 1, this.destroyedShips,
-                 this.bulletsToEnd, 
-                 this.bullets.removeOffScreen(WIDTH, HEIGHT).moveAll(), this.ships.moveAll(WIDTH),
-                this.fighter.move(WIDTH));
-        }
+        ILoShip newShips = this.spawn().removeCollision(this.bullets).moveAll(WIDTH);
+        ILoBullet newBullets = this.bullets.removeOffScreen(WIDTH, HEIGHT).moveAll(); 
+
+        return new NBullets(this.newSpawnRate(), this.destroyedShips,
+                 this.bulletsToEnd, newBullets, newShips,this.fighter.move(WIDTH));  
       }  
 
     public World onKeyEvent(String key) {
@@ -85,6 +73,29 @@ class NBullets extends World {
                  this.bullets);
 
     }
+
+    public ILoShip spawn() {
+        if (spawnRate == FixedReq) {
+            int randomNum = 0;
+            while (randomNum == 0) {   
+               randomNum = this.rand.nextInt(6);
+            }
+            return  this.ships.spawn(randomNum,WIDTH, HEIGHT);
+            
+        } else {
+          return this.ships;
+        }
+      }  
+
+      public int newSpawnRate() {
+        if (spawnRate < FixedReq) {
+            return spawnRate + 1;
+        }
+        else {
+            return 0;
+        }
+      }
+    
     // Draws how many bullets are left and how many ships have been destroyed so far.
     public WorldScene drawInfo() {
         int w = WIDTH/10;

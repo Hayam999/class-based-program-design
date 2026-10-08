@@ -1,5 +1,5 @@
 {
-  "java.project.sourcePaths": ["src/Bullet", "src/Ship", "src"],
+  "java.project.sourcePaths": ["src/Bullet", "src/Ship", "src/MyPosn", "src"],
   "java.project.referencedLibraries": ["../*.jar"],
   "java.debug.settings.onBuildFailureProceed": true
 }

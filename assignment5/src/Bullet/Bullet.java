@@ -7,6 +7,7 @@ import javalib.worldimages.*;
     ILoBullet moveAll();
     ILoBullet removeOffScreen(int widht, int height);
     WorldScene placeAll(WorldScene scene);
+    boolean collided(MyPosn pos);
 }
 public class Bullet {
     MyPosn pos;
@@ -34,37 +35,14 @@ public class Bullet {
     public WorldScene place(WorldScene scene) {
         return scene.placeImageXY(this.draw(), this.pos.getX(), this.pos.getY());
     }
+
+    public boolean collided(MyPosn pos) {
+        return this.pos.checkCollision(pos);
+    }
 }
 
 
 
-class MyPosn extends Posn {
- 
-  // standard constructor
-  MyPosn(int x, int y) {
-    super(x, y);
-  }
- 
-  // constructor to convert from a Posn to a MyPosn
-  MyPosn(Posn p) {
-    this(p.x, p.y);
-  }
-
-  public MyPosn add(MyPosn p) {
-    return new MyPosn(p.x + this.x , p.y + this.y);
-  }
-
-  public boolean isOffScreen(int w, int h) {
-    return this.x < 0 || this.y < 0 || this.x >= w || this.y >= h;
-  }
-
-  public int getX() {
-    return this.x;
-  }
-  public int getY() {
-    return this.y;
-  }
-}
 class MtLoBullet implements ILoBullet {
     MtLoBullet() {}
     
@@ -82,6 +60,10 @@ class MtLoBullet implements ILoBullet {
 
     public WorldScene placeAll(WorldScene scene) {
         return scene;
+    }
+
+    public boolean collided(MyPosn pos) {
+        return false;
     }
 
 }
@@ -115,5 +97,12 @@ class ConsLoBullet implements ILoBullet {
 
     public WorldScene placeAll(WorldScene scene) {
         return this.rest.placeAll(this.first.place(scene));
+    }
+    
+    public boolean collided(MyPosn pos) {
+        if (this.first.collided(pos)) {
+            return true;
+        }
+        else return this.rest.collided(pos);
     }
 }
