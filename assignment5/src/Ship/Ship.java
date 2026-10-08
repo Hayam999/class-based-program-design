@@ -14,6 +14,7 @@ public interface Ship {
     WorldScene place(WorldScene scene); 
     WorldImage draw();
     Ship move(int width);
+    int getX();
 }
 
 class MyPosn extends Posn {
@@ -59,6 +60,10 @@ abstract class AShip implements Ship {
         return scene.placeImageXY(this.draw(), this.pos.getX(), this.pos.getY());
     }
 
+    public int getX() {
+        return this.pos.getX();
+    }
+
     
 
 }
@@ -100,7 +105,7 @@ class EnemyShip extends AShip {
     
 
     public WorldImage draw() {
-        return new CircleImage(this.size, OutlineMode.SOLID, Color.RED);
+        return new CircleImage(this.size, OutlineMode.SOLID, Color.DARK_GRAY);
     }
 
     public Ship move(int widht) {

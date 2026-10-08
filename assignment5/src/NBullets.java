@@ -16,31 +16,37 @@ class NBullets extends World {
     ILoBullet bullets;
     ILoShip ships;
     Random rand;
+    Ship fighter;
 
-    NBullets(int spawnRate, int destroyedShips, int bulletsToEnd, ILoBullet bullets, ILoShip ships) {
+    NBullets(int spawnRate, int destroyedShips, int bulletsToEnd, ILoBullet bullets, ILoShip ships, Ship fighter) {
         this.spawnRate = spawnRate;
         this.destroyedShips = destroyedShips;
         this.bulletsToEnd = bulletsToEnd;
         this.bullets = bullets;
         this.ships = ships;
         this.rand = new Random();
+        this.fighter = fighter;
     }
 
     
     NBullets(int bulletsToEnd, Random rand) {
+        Ship fighter = (new FightShip(
+            new MyPosn(this.WIDTH/2,  this.HEIGHT - 15), new MyPosn(2, 0), 30));
         this.rand = rand;
         this.destroyedShips = 0;
         this.spawnRate = 0;
         this.bulletsToEnd = bulletsToEnd;
-        this.ships = new ConsLoShip(new FightShip(
-            new MyPosn(this.WIDTH/2,  this.HEIGHT - 15), new MyPosn(2, 0), 30), new MtLoShip());
+        this.ships = new ConsLoShip(fighter, new MtLoShip());
+        this.bullets = new MtLoBullet();
+        this.fighter = fighter;
     }
     
     NBullets(int bulletsToEnd) {
         this(bulletsToEnd, new Random());
     }
     public WorldScene makeScene() {
-        return this.ships.placeAll(this.drawInfo());
+        return this.ships.placeAll(this.bullets.placeAll(this.drawInfo()));
+        
     }
 
     public World onTick() {
@@ -52,12 +58,33 @@ class NBullets extends World {
             }
             ILoShip newShips = this.ships.spawn(randomNum,WIDTH, HEIGHT);
             return new NBullets(0, this.destroyedShips,
-                 this.bulletsToEnd, this.bullets, newShips.moveAll(WIDTH));
+                 this.bulletsToEnd,
+                  this.bullets.removeOffScreen(WIDTH, HEIGHT).moveAll(), newShips.moveAll(WIDTH),
+                this.fighter.move(WIDTH));
         } else {
             return new NBullets(this.spawnRate + 1, this.destroyedShips,
-                 this.bulletsToEnd, this.bullets, this.ships.moveAll(WIDTH));
+                 this.bulletsToEnd, 
+                 this.bullets.removeOffScreen(WIDTH, HEIGHT).moveAll(), this.ships.moveAll(WIDTH),
+                this.fighter.move(WIDTH));
         }
       }  
+
+    public World onKeyEvent(String key) {
+        if (key.equals(" ")) {
+            return new NBullets(this.spawnRate, this.destroyedShips, 
+                this.bulletsToEnd, this.addABullet(), this.ships, this.fighter);
+        } else {
+            return this;
+        }
+    }
+    
+    public ILoBullet addABullet() {
+        return new ConsLoBullet(
+
+                new Bullet(new MyPosn(this.fighter.getX(), HEIGHT - 50), new MyPosn(0, -5), 1),
+                 this.bullets);
+
+    }
     // Draws how many bullets are left and how many ships have been destroyed so far.
     public WorldScene drawInfo() {
         int w = WIDTH/10;
@@ -71,7 +98,7 @@ class NBullets extends World {
 
         return new WorldScene(WIDTH, HEIGHT).placeImageXY(info, w, h);
     }
-
+    
     public WorldEnd worldEnds() {
         if (bulletsToEnd <= 0 && bullets.length() <= 0) {
           return new WorldEnd(true, this.makeAFinalScene());
