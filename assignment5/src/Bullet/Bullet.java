@@ -11,7 +11,7 @@ import tester.*;
     boolean collided(MyPosn pos);
     ILoBullet updateCollision(ILoShip ships);
     ILoBullet replaceCollisionHandler(ILoBullet collidedBullets, ILoShip ships  );
-    ILoBullet explode(ILoBullet bulletsToExplode);
+    ILoBullet explode();
 }
 public class Bullet {
     MyPosn pos;
@@ -64,13 +64,17 @@ public class Bullet {
         return ships.collided(this.pos);
     }
 
-  //  public Bullet duplicate(int i) {
-  //      int xPlus = this.xplosionDegree + 1;
-  //      int fireOffAt = i * (360 / xPlus);
-  //      double thetaInRadians = fromDegreesToRadians(fireOffAt);
-  //      double length = Math.hypot(, double y);
-  //      return new Bullet(this.pos, velocity, xPlus, this.pos);
-  //  }
+    public Bullet duplicate(int i) {
+        int newXpDegree = this.xplosionDegree + 1;
+        int fireOffAt = i * (360 / newXpDegree);
+        double thetaInRadians = this.fromDegreesToRadians(fireOffAt);
+        int xVelocity = -1;
+        if (i % 2 == 0) {
+            xVelocity = 1;
+        }
+
+        return new Bullet(this.pos, new MyPosn(xVelocity, -5), newXpDegree, this.pos, thetaInRadians);
+    }
 
     private double fromDegreesToRadians(int inDegrees) {
     return  inDegrees * (Math.PI / 180);
@@ -116,10 +120,10 @@ class MtLoBullet implements ILoBullet {
 
 
     public ILoBullet replaceCollisionHandler(ILoBullet collidedBullets, ILoShip ships) {
-        return explode(collidedBullets);
+        return collidedBullets.explode();
     }
 
-    public ILoBullet explode(ILoBullet bulletsToExplode) {
+    public ILoBullet explode() {
         
         return new MtLoBullet();
     }
@@ -163,19 +167,23 @@ class ConsLoBullet implements ILoBullet {
         else return this.rest.collided(pos);
     }
 
-    public ILoBullet explode(ILoBullet bulletsToExplode) {
-        return new MtLoBullet();
-       // ILoBullet restOfBullets =  this.rest.explode();
-       // int numOfDuplicatedBullets = this.first.xplosionDegree + 1;
-       // int i = 0;
-//
-       // while (numOfDuplicatedBullets > 0) {
-       //     restOfBullets = new ConsLoBullet(this.first.duplicate(i), restOfBullets);
-       //     numOfDuplicatedBullets--; 
-       //     i++;
-       // }
-//
-       // return restOfBullets;
+    public ILoBullet explode() {
+        return this.explodeHandler(this.first);
+    }
+    
+    public ILoBullet explodeHandler(Bullet father) {
+        ILoBullet restOfBullets =  this.rest.explode();
+        int numOfBulletsToGenerate = father.xplosionDegree + 1;
+        int i = 0;
+        
+        while (numOfBulletsToGenerate > 0) {
+            restOfBullets = new ConsLoBullet(father.duplicate(i) , restOfBullets);
+            numOfBulletsToGenerate--; 
+            i++;
+        }
+        
+        return restOfBullets;
+
     }
 
 

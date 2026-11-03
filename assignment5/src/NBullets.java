@@ -4,7 +4,7 @@ import javalib.funworld.*;      // the abstract World class and the big-bang lib
 import java.awt.Color;          // general colors (as triples of red,green,blue values)
 import java.util.Random;
 
-
+// TODO update remained bullets on the screen;
 
 class NBullets extends World {
     int WIDTH = 1500;
