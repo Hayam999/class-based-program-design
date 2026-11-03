@@ -3,6 +3,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "ExamplesNBullets",
+      "request": "launch",
+      "mainClass": "ExamplesNBullets",
+      "projectName": "class-based-program-design_d0599225"
+    },
+    {
+      "type": "java",
       "name": "ExamplesSimpleGame",
       "request": "launch",
       "mainClass": "ExamplesSimpleGame",

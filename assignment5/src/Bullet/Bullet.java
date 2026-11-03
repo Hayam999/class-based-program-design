@@ -1,6 +1,7 @@
 import java.awt.Color;
 import javalib.funworld.WorldScene;
 import javalib.worldimages.*;
+import tester.*;
 
  interface ILoBullet {
     int length();
@@ -9,24 +10,42 @@ import javalib.worldimages.*;
     WorldScene placeAll(WorldScene scene);
     boolean collided(MyPosn pos);
     ILoBullet replaceCollision(ILoShip ships);
+    ILoBullet replaceCollisionHandler(ILoBullet collidedBullets, ILoShip ships  );
+    ILoBullet explode();
 }
 public class Bullet {
     MyPosn pos;
     MyPosn velocity;
     int xplosionDegree;
+    MyPosn oldPos;
+    double thetaInRadians;
 
-    Bullet(MyPosn pos, MyPosn velocity, int xplosionDegree) {
+    Bullet(MyPosn pos, MyPosn velocity, int xplosionDegree,
+        MyPosn oldPos, double thetaInRadians) {
         this.pos = pos;
+        this.oldPos = oldPos;
         this.velocity = velocity;
         this.xplosionDegree = xplosionDegree;
+        this.thetaInRadians = thetaInRadians;
+    }
+
+    // overloaded that constructor for making an initial bullet fired from the ship
+    Bullet(MyPosn pos, MyPosn velocity) {
+        this(pos, velocity, 1, pos, 90.0);
     }
     public WorldImage draw() {
         return new EllipseImage(10, 25, OutlineMode.SOLID, Color.RED); 
     }
 
     public Bullet move() {
-        return new Bullet(new MyPosn(this.pos.getX(),
-             this.pos.getY() + this.velocity.getY()), this.velocity, this.xplosionDegree);
+
+        int newX = (int) Math.round(this.calculateX(this.thetaInRadians));
+        int newY = (int) Math.round(this.calculateY(this.thetaInRadians));
+
+        return new Bullet(
+            new MyPosn(newX, newY),
+             this.velocity, this.xplosionDegree, 
+            this.oldPos, this.thetaInRadians);
     }
 
     public boolean isOffScreen(int width, int height) {
@@ -44,6 +63,26 @@ public class Bullet {
     public boolean collidsAny(ILoShip ships) {
         return ships.collided(this.pos);
     }
+
+  //  public Bullet duplicate(int i) {
+  //      int xPlus = this.xplosionDegree + 1;
+  //      int fireOffAt = i * (360 / xPlus);
+  //      double thetaInRadians = fromDegreesToRadians(fireOffAt);
+  //      double length = Math.hypot(, double y);
+  //      return new Bullet(this.pos, velocity, xPlus, this.pos);
+  //  }
+
+    private double fromDegreesToRadians(int inDegrees) {
+    return  inDegrees * (Math.PI / 180);
+    }
+    private double calculateX(double thetaInRadians) {
+     return  (this.velocity.getX() * Math.cos(thetaInRadians)) + this.pos.getX();
+    }
+
+    private double calculateY(double thetaInRadians) {
+      return  (this.velocity.getY() * Math.round(Math.sin(thetaInRadians))) + this.pos.getY();
+    }
+
 }
 
 
@@ -75,6 +114,14 @@ class MtLoBullet implements ILoBullet {
         return new MtLoBullet();
     }
 
+
+    public ILoBullet replaceCollisionHandler(ILoBullet collidedBullets, ILoShip ships) {
+        return collidedBullets.explode();
+    }
+
+    public ILoBullet explode() {
+        return new MtLoBullet();
+    }
 }
 
 class ConsLoBullet implements ILoBullet {
@@ -115,12 +162,69 @@ class ConsLoBullet implements ILoBullet {
         else return this.rest.collided(pos);
     }
 
+    public ILoBullet explode() {
+        ILoBullet restOfBullets =  this.rest.explode();
+        int numOfDuplicatedBullets = this.first.xplosionDegree + 1;
+        int i = 0;
+
+    //    while (numOfDuplicatedBullets > 0) {
+    //        restOfBullets = new ConsLoBullet(this.first.duplicate(i), restOfBullets);
+    //        numOfDuplicatedBullets--; 
+    //        i++;
+    //    }
+
+        return restOfBullets;
+    }
+
+
     public ILoBullet replaceCollision(ILoShip ships) {
+        return replaceCollisionHandler(new MtLoBullet(), ships);
+    }
+
+    public ILoBullet replaceCollisionHandler(ILoBullet collidedBullets, ILoShip ships) {
         if (this.first.collidsAny(ships)) {
-            return this.rest.replaceCollision(ships);
+            return this.rest.replaceCollisionHandler(
+                new ConsLoBullet(this.first, collidedBullets), ships);
         }
         else {
-            return new ConsLoBullet(this.first, this.rest.replaceCollision(ships));
+            return  this.rest.replaceCollisionHandler(collidedBullets, ships);
         }
+    }
+}
+
+
+class ExamplesBullet {
+    Bullet b1 = new Bullet(new MyPosn(50, 50), new MyPosn(0, -5));
+    Bullet b1Moved = new Bullet(new MyPosn(50, 45), new MyPosn(0, -5), 1,
+new MyPosn(50, 50), 90.0);
+
+    boolean testMove(Tester t) {
+       return t.checkExpect(b1.move(), b1Moved);
+    }
+
+    public static void main(String[] args) {
+
+        // ============================================================
+        // DEBUG MODE: use this when you want to set a breakpoint and
+        // step through a specific method. Tester.runReport is NOT used
+        // here, so there's no 60ms watchdog timeout to fight with the
+        // debugger -- you can pause for as long as you want.
+        //
+        // To use it: comment out the "NORMAL MODE" line below, uncomment
+        // this block, edit the method call to whatever you're currently
+        // debugging, put your breakpoint inside that method, then hit
+        // Debug (F5) on this file/config.
+        // ------------------------------------------------------------
+        // boolean result = nums.satisfyingStrict.strictSatisfy(); 
+           ExamplesBullet game = new ExamplesBullet();
+           Bullet result = game.b1.move();   // runs with no watchdog, window can actually open
+          // System.out.println(result..getX() + " " + result.velocity.getY());
+        // ============================================================
+
+        // NORMAL MODE: runs the full test suite (has the 60ms timeout,
+        // fine for a plain run, awkward if you're paused at a breakpoint)
+        // game.testBigBang(new Tester());
+        
+         Tester.runReport(new ExamplesBullet(), false, false);
     }
 }

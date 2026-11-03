@@ -1,4 +1,4 @@
-import tester.*;                // The tester library
+import tester.*;
 import javalib.worldimages.*;   // images, like RectangleImage or OverlayImages
 import javalib.funworld.*;      // the abstract World class and the big-bang library
 import java.awt.Color;          // general colors (as triples of red,green,blue values)
@@ -52,7 +52,8 @@ class NBullets extends World {
     public World onTick() {
         ILoShip newShips = this.spawn().removeCollision(this.bullets).moveAll(WIDTH);
         ILoBullet newBullets =
-         this.bullets.removeOffScreen(WIDTH, HEIGHT).replaceCollision(this.ships).moveAll(); 
+         this.bullets.removeOffScreen(WIDTH, HEIGHT).moveAll(); 
+
 
         return new NBullets(this.newSpawnRate(), this.destroyedShips,
                  this.bulletsToEnd, newBullets, newShips,this.fighter.move(WIDTH));  
@@ -69,8 +70,7 @@ class NBullets extends World {
     
     public ILoBullet addABullet() {
         return new ConsLoBullet(
-
-                new Bullet(new MyPosn(this.fighter.getX(), HEIGHT - 50), new MyPosn(0, -5), 1),
+                new Bullet(new MyPosn(this.fighter.getX(), HEIGHT - 50), new MyPosn(0, -5)),
                  this.bullets);
 
     }
@@ -160,6 +160,6 @@ class ExamplesNBullets {
         // fine for a plain run, awkward if you're paused at a breakpoint)
            game.testBigBang(new Tester());
       
-       Tester.runReport(new ExamplesNBullets(), false, false);
+      // Tester.runReport(new ExamplesNBullets(), false, false);
     }
 }
