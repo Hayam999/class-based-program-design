@@ -2,16 +2,16 @@ import java.awt.Color;
 import javalib.funworld.WorldScene;
 import javalib.worldimages.*;
 import tester.*;
-
+// 
  interface ILoBullet {
     int length();
     ILoBullet moveAll();
     ILoBullet removeOffScreen(int widht, int height);
     WorldScene placeAll(WorldScene scene);
     boolean collided(MyPosn pos);
-    ILoBullet replaceCollision(ILoShip ships);
+    ILoBullet updateCollision(ILoShip ships);
     ILoBullet replaceCollisionHandler(ILoBullet collidedBullets, ILoShip ships  );
-    ILoBullet explode();
+    ILoBullet explode(ILoBullet bulletsToExplode);
 }
 public class Bullet {
     MyPosn pos;
@@ -110,16 +110,17 @@ class MtLoBullet implements ILoBullet {
         return false;
     }
 
-    public ILoBullet replaceCollision(ILoShip ships) {
+    public ILoBullet updateCollision(ILoShip ships) {
         return new MtLoBullet();
     }
 
 
     public ILoBullet replaceCollisionHandler(ILoBullet collidedBullets, ILoShip ships) {
-        return collidedBullets.explode();
+        return explode(collidedBullets);
     }
 
-    public ILoBullet explode() {
+    public ILoBullet explode(ILoBullet bulletsToExplode) {
+        
         return new MtLoBullet();
     }
 }
@@ -162,23 +163,24 @@ class ConsLoBullet implements ILoBullet {
         else return this.rest.collided(pos);
     }
 
-    public ILoBullet explode() {
-        ILoBullet restOfBullets =  this.rest.explode();
-        int numOfDuplicatedBullets = this.first.xplosionDegree + 1;
-        int i = 0;
-
-    //    while (numOfDuplicatedBullets > 0) {
-    //        restOfBullets = new ConsLoBullet(this.first.duplicate(i), restOfBullets);
-    //        numOfDuplicatedBullets--; 
-    //        i++;
-    //    }
-
-        return restOfBullets;
+    public ILoBullet explode(ILoBullet bulletsToExplode) {
+        return new MtLoBullet();
+       // ILoBullet restOfBullets =  this.rest.explode();
+       // int numOfDuplicatedBullets = this.first.xplosionDegree + 1;
+       // int i = 0;
+//
+       // while (numOfDuplicatedBullets > 0) {
+       //     restOfBullets = new ConsLoBullet(this.first.duplicate(i), restOfBullets);
+       //     numOfDuplicatedBullets--; 
+       //     i++;
+       // }
+//
+       // return restOfBullets;
     }
 
 
-    public ILoBullet replaceCollision(ILoShip ships) {
-        return replaceCollisionHandler(new MtLoBullet(), ships);
+    public ILoBullet updateCollision(ILoShip ships) {
+        return replaceCollisionHandler(new MtLoBullet(),  ships);
     }
 
     public ILoBullet replaceCollisionHandler(ILoBullet collidedBullets, ILoShip ships) {
@@ -187,7 +189,7 @@ class ConsLoBullet implements ILoBullet {
                 new ConsLoBullet(this.first, collidedBullets), ships);
         }
         else {
-            return  this.rest.replaceCollisionHandler(collidedBullets, ships);
+            return new ConsLoBullet(this.first, this.rest.replaceCollisionHandler(collidedBullets, ships));
         }
     }
 }
