@@ -31,39 +31,38 @@ public class Bullet {
 
     // overloaded that constructor for making an initial bullet fired from the ship
     Bullet(MyPosn pos, MyPosn velocity) {
-        this(pos, velocity, 1, pos, 90.0);
+        this(pos, velocity, 1, pos, 270.0);
     }
     public WorldImage draw() {
         return new EllipseImage(10, 25, OutlineMode.SOLID, Color.RED); 
     }
 
     public Bullet move() {
-
         int newX = (int) Math.round(this.calculateX(this.thetaInRadians));
         int newY = (int) Math.round(this.calculateY(this.thetaInRadians));
-
+        
         return new Bullet(
             new MyPosn(newX, newY),
-             this.velocity, this.xplosionDegree, 
+            this.velocity, this.xplosionDegree, 
             this.oldPos, this.thetaInRadians);
-    }
+        }
 
-    public boolean isOffScreen(int width, int height) {
-        return this.pos.isOffScreen(width, height);
-    }
-
-    public WorldScene place(WorldScene scene) {
-        return scene.placeImageXY(this.draw(), this.pos.getX(), this.pos.getY());
-    }
-
+        public boolean isOffScreen(int width, int height) {
+            return this.pos.isOffScreen(width, height);
+        }
+        
+        public WorldScene place(WorldScene scene) {
+            return scene.placeImageXY(this.draw(), this.pos.getX(), this.pos.getY());
+        }
+        
     public boolean collided(MyPosn pos) {
         return this.pos.checkCollision(pos);
     }
-
+    
     public boolean collidsAny(ILoShip ships) {
         return ships.collided(this.pos);
     }
-
+    
     public Bullet duplicate(int i) {
         int newXpDegree = this.xplosionDegree + 1;
         int fireOffAt = i * (360 / newXpDegree);
@@ -72,19 +71,21 @@ public class Bullet {
         if (i % 2 == 0) {
             xVelocity = 1;
         }
-
+        
         return new Bullet(this.pos, new MyPosn(xVelocity, -5), newXpDegree, this.pos, thetaInRadians);
     }
-
+    
     private double fromDegreesToRadians(int inDegrees) {
-    return  inDegrees * (Math.PI / 180);
+        return  inDegrees * (Math.PI / 180);
     }
     private double calculateX(double thetaInRadians) {
-     return  (this.velocity.getX() * Math.cos(thetaInRadians)) + this.pos.getX();
+     double result = this.pos.getX() + 5 * Math.floor(Math.cos(thetaInRadians));
+     System.out.println(Math.cos(thetaInRadians));
+     return result;
     }
 
     private double calculateY(double thetaInRadians) {
-      return  (this.velocity.getY() * Math.round(Math.sin(thetaInRadians))) + this.pos.getY();
+      return  this.pos.getY() + 5 * Math.floor(Math.sin(thetaInRadians));
     }
 
 }
@@ -122,7 +123,7 @@ class MtLoBullet implements ILoBullet {
     public ILoBullet replaceCollisionHandler(ILoBullet collidedBullets, ILoShip ships) {
         return collidedBullets.explode();
     }
-
+    
     public ILoBullet explode() {
         
         return new MtLoBullet();
@@ -132,18 +133,18 @@ class MtLoBullet implements ILoBullet {
 class ConsLoBullet implements ILoBullet {
     Bullet first;
     ILoBullet rest;
-
+    
     ConsLoBullet(Bullet first, ILoBullet rest) {
         this.first = first;
         this.rest  = rest;
     }
-
+    
     public int length() {
         return 1 + this.rest.length();
     }
     
     public ILoBullet moveAll() {
-       return new ConsLoBullet(this.first.move(), this.rest.moveAll());
+        return new ConsLoBullet(this.first.move(), this.rest.moveAll());
     }
     
     public ILoBullet removeOffScreen(int width,int height) {
@@ -155,7 +156,7 @@ class ConsLoBullet implements ILoBullet {
             return new ConsLoBullet(this.first, this.rest.removeOffScreen(width, height));
         }
     }
-
+    
     public WorldScene placeAll(WorldScene scene) {
         return this.rest.placeAll(this.first.place(scene));
     }
@@ -183,20 +184,21 @@ class ConsLoBullet implements ILoBullet {
         }
         
         return restOfBullets;
-
+        
     }
-
-
+    
+    
     public ILoBullet updateCollision(ILoShip ships) {
         return replaceCollisionHandler(new MtLoBullet(),  ships);
     }
-
+    
     public ILoBullet replaceCollisionHandler(ILoBullet collidedBullets, ILoShip ships) {
         if (this.first.collidsAny(ships)) {
             return this.rest.replaceCollisionHandler(
                 new ConsLoBullet(this.first, collidedBullets), ships);
-        }
-        else {
+            }
+            else {
+                
             return new ConsLoBullet(this.first, this.rest.replaceCollisionHandler(collidedBullets, ships));
         }
     }

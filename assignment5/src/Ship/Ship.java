@@ -20,6 +20,7 @@ public interface Ship {
     int getX();
     boolean collidsAny(ILoBullet bullets);
     boolean collided(MyPosn pos);
+    boolean isEnemy();
 }
 
 
@@ -27,13 +28,16 @@ abstract class AShip implements Ship {
     MyPosn pos;
     MyPosn velocity;
     int size;
+    boolean isEnemy;
 
-    AShip(MyPosn pos, MyPosn velocity, int size) {
+   
+     
+    AShip(MyPosn pos, MyPosn velocity, int size, boolean isEnemy) {
         this.pos = pos;
         this.velocity = velocity;
         this.size = size;
+        this.isEnemy = isEnemy;
     }
-     
     public WorldScene place(WorldScene scene) {
         return scene.placeImageXY(this.draw(), this.pos.getX(), this.pos.getY());
     }
@@ -50,13 +54,17 @@ abstract class AShip implements Ship {
         return this.pos.checkCollision(pos);
     }
 
+    public boolean isEnemy() {
+        return this.isEnemy;
+    }
+
 
 }
 
 class FightShip extends AShip{
 
     FightShip(MyPosn pos, MyPosn velocity, int size) {
-        super(pos, velocity, size);
+        super(pos, velocity, size, false);
     }
 
     public WorldImage draw() {
@@ -85,7 +93,7 @@ class FightShip extends AShip{
 class EnemyShip extends AShip {
 
     EnemyShip(MyPosn pos, MyPosn velocity, int size) {
-        super(pos, velocity, size);
+        super(pos, velocity, size, true);
     }
     
 
@@ -169,8 +177,8 @@ class ConsLoShip implements ILoShip {
     }
 
     public ILoShip removeCollision(ILoBullet bullets) {
-        if (this.first.collidsAny(bullets)) {
-            return this.rest.removeCollision(bullets);
+        if (this.first.collidsAny(bullets) && this.first.isEnemy()) {
+                return this.rest.removeCollision(bullets);
         }
         else {
             return new ConsLoShip(this.first,

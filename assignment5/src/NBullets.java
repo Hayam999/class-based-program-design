@@ -4,7 +4,6 @@ import javalib.funworld.*;      // the abstract World class and the big-bang lib
 import java.awt.Color;          // general colors (as triples of red,green,blue values)
 import java.util.Random;
 
-// TODO update remained bullets on the screen;
 
 class NBullets extends World {
     int WIDTH = 1500;
@@ -70,7 +69,7 @@ class NBullets extends World {
     
     public ILoBullet addABullet() {
         return new ConsLoBullet(
-                new Bullet(new MyPosn(this.fighter.getX(), HEIGHT - 50), new MyPosn(0, -5)),
+                new Bullet(new MyPosn(this.fighter.getX(), HEIGHT - 50), new MyPosn(1, 1)),
                  this.bullets);
 
     }
