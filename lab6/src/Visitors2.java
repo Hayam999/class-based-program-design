@@ -8,11 +8,17 @@ interface IFunc<A, R> {
   R apply(A input);
 }
 
-interface JSONVisitor<T> extends IFunc<JSON, T> {
+
+interface IFunc2<A1, A2, R> {
+    R apply(A1 arg1, A2 arg2);
+}
+
+interface JSONVisitor<T> extends IFunc<JSON, T> , IFunc2<JSON, T, T>{
   T visitJsBlank(JSONBlank js);
   T visitJsNumber(JSONNumber js);
   T visitJsBool(JSONBool js);
   T visitJsString(JSONString js);
+  T visitJSONList(JSONList js);
 }
 
 // generic list
@@ -20,6 +26,7 @@ interface IList<T> {
   // map over a list, and produce a new list with a (possibly different)
   // element type
   <U> IList<U> map(IFunc<T, U> f);
+  <R> R foldr(IFunc2<T, R, R> func, R base);
 
 }
  
@@ -29,6 +36,9 @@ class MtList<T> implements IList<T> {
     return new MtList<U>();
   }
 
+  public <R> R foldr(IFunc2<T, R, R> func, R base) {
+    return base;
+  }
 
 }
  
@@ -46,9 +56,9 @@ class ConsList<T> implements IList<T> {
     return new ConsList<U>(f.apply(this.first), this.rest.map(f));
   }
 
-
-
-
+  public <R> R foldr(IFunc2<T, R, R> func, R base) {
+    return func.apply(this.first, this.rest.foldr(func, base));
+  }
 }
 
 // no value
@@ -99,6 +109,12 @@ class JSONString implements JSON {
 
 class  JSONToNumber implements JSONVisitor<Integer> {
 
+  public Integer apply(JSON js) {
+    return js.accept(this);
+  }
+  public Integer apply(JSON js, Integer acc) {
+    return js.accept(this) + acc;
+  }
   public Integer visitJsBlank(JSONBlank js) {
     return 0;
   }
@@ -116,8 +132,21 @@ class  JSONToNumber implements JSONVisitor<Integer> {
   public Integer visitJsString(JSONString js) {
     return js.str.length();
   }
-  public Integer apply(JSON js) {
-    return js.accept(this);
+  public Integer visitJSONList(JSONList js) {
+    return js.values.foldr(this, 0);
+  }
+}
+
+//a list of JSON values
+class JSONList implements JSON {
+  IList<JSON> values;
+ 
+  JSONList(IList<JSON> values) {
+    this.values = values;
+  }
+
+  public <T> T accept(JSONVisitor<T> visitor) {
+    return visitor.visitJSONList(this);
   }
 }
 
@@ -129,6 +158,13 @@ class ExamplesJSONS {
                        new ConsList<JSON>(new JSONBool(true), 
                        new ConsList<JSON>(new JSONBool(false), 
                        new ConsList<JSON>(new JSONBlank(), new MtList<JSON>()))))));
+    JSON jsList = new JSONList(jsons);
+
+    IList<JSON> jsons2 = new ConsList<JSON>(new JSONNumber(9),
+                            new ConsList<JSON>(jsList,
+                              new ConsList<JSON>(new JSONBool(true),
+                                      new MtList<JSON>())));
+
     IList<Integer> expectedNumbers = new ConsList<Integer>(5, 
       new ConsList<Integer>(0, 
         new ConsList<Integer>(5,
@@ -146,7 +182,10 @@ class ExamplesJSONS {
 
 
     boolean testMethod(Tester t) {
-      return t.checkExpect(jsons.map(new JSONToNumber()), expectedNumbers);
+      return t.checkExpect(jsons.map(new JSONToNumber()), expectedNumbers) &&
+             t.checkExpect(jsons2.foldr(new JSONToNumber(), 0), 21);
+
+
     }
 
     public static void main(String[] args) {
