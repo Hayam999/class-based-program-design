@@ -1,14 +1,10 @@
-# Fundamentals II: Introduction to Class-based Program Design
+# [Fundamentals II: Introduction to Class-based Program Design](https://course.ccs.neu.edu/cs2510sp22/index.html)
 
 **My solutions to course assignments**
 
 > **Note:** The solutions and naming of the files are not necessarily compatible with the submission system of the course.
 >
 > The main classes of Java files use two modes for running. You can use either mode, or comment out what you don't need.
-
-**[Course Link](https://course.ccs.neu.edu/cs2510sp22/index.html)**
-
----
 
 ## Course Progress
 
@@ -32,10 +28,10 @@ The schedule is organized into weekly units. Each unit contains the lectures, la
 **Started:** 20,Aug 2026 <br>
 **Completed:** <br>
 
-## Pre Algebra Course Progress
+## [Pre Algebra Course Progress:](https://www.youtube.com/playlist?list=PLm2VEQtiYjhoZuRqvrC_dxSrwr0uexm4l)
 
 | Week | Vedios         | Assignment         | Expected Time | Actual Time |
 | ---- | -------------- | ------------------ | ------------: | ----------: |
 | 1    | **Videos 2–3** | **Assignment 1–2** |       30, Sep |     25, Sep |
 | 2    | **Videos 4–5** | **Assignment 2–3** |        2, Oct |      2, Oct |
-| 3    | **Videos 6–7** | **Assignment 4–6** |        9, Oct |             |
+| 3    | **Videos 6–7** | **Assignment 4–5** |        9, Oct |             |

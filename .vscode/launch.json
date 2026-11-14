@@ -3,6 +3,20 @@
   "configurations": [
     {
       "type": "java",
+      "name": "ExamplesJSONS",
+      "request": "launch",
+      "mainClass": "ExamplesJSONS",
+      "projectName": "class-based-program-design_d0599225"
+    },
+    {
+      "type": "java",
+      "name": "ExamplesVisitors",
+      "request": "launch",
+      "mainClass": "ExamplesVisitors",
+      "projectName": "class-based-program-design_d0599225"
+    },
+    {
+      "type": "java",
       "name": "ExamplesNBullets",
       "request": "launch",
       "mainClass": "ExamplesNBullets",
