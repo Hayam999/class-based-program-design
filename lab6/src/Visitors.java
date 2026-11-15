@@ -21,6 +21,7 @@ interface IList<T> {
   // element type
   <U> IList<U> map(IFunc<T, U> f);
   <R> R foldr(IFunc2<T, R, R> func, R base);
+  <U> U findSolutionOrElse(IFunc<T, U> convert, IPred<U> pred, U backup);
 
 }
  
@@ -34,6 +35,9 @@ class MtList<T> implements IList<T> {
     return base;
   }
 
+  public <U> U findSolutionOrElse(IFunc<T, U> convert, IPred<U> pred, U backup) {
+    return backup;
+  }
 }
  
 // non-empty generic list
@@ -52,6 +56,14 @@ class ConsList<T> implements IList<T> {
 
   public <R> R foldr(IFunc2<T, R, R> func, R base) {
     return func.apply(this.first, this.rest.foldr(func, base));
+  }
+
+  public <U> U findSolutionOrElse(IFunc<T, U> convert, IPred<U> pred, U backup) {
+    if (pred.apply(convert.apply(this.first))) {
+      return convert.apply(this.first);
+    } else {
+      return this.rest.findSolutionOrElse(convert, pred, backup);
+    }
   }
 }
 

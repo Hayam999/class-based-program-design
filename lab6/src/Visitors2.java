@@ -19,6 +19,7 @@ interface JSONVisitor<T> extends IFunc<JSON, T> , IFunc2<JSON, T, T>{
   T visitJsBool(JSONBool js);
   T visitJsString(JSONString js);
   T visitJSONList(JSONList js);
+  T visitJSONObject(JSONObject js);
 }
 
 // generic list
@@ -30,6 +31,13 @@ interface IList<T> {
 
 }
  
+
+class extractJSON implements IFunc<Pair<String, JSON>, JSON> {
+  public JSON apply(Pair<String, JSON> p) {
+    return p.y;
+  }
+}
+
 // empty generic list
 class MtList<T> implements IList<T> {
   public <U> IList<U> map(IFunc<T, U> f) {
@@ -107,6 +115,31 @@ class JSONString implements JSON {
   }
 }
 
+//a list of JSON values
+class JSONList implements JSON {
+  IList<JSON> values;
+ 
+  JSONList(IList<JSON> values) {
+    this.values = values;
+  }
+
+  public <T> T accept(JSONVisitor<T> visitor) {
+    return visitor.visitJSONList(this);
+  }
+}
+
+// a list of JSON pairs
+class JSONObject implements JSON {
+  IList<Pair<String, JSON>> pairs;
+ 
+  JSONObject(IList<Pair<String, JSON>> pairs) {
+    this.pairs = pairs;
+  }
+
+  public <T> T accept(JSONVisitor<T> visitor) {
+    return visitor.visitJSONObject(this);
+  }
+}
 class  JSONToNumber implements JSONVisitor<Integer> {
 
   public Integer apply(JSON js) {
@@ -135,21 +168,22 @@ class  JSONToNumber implements JSONVisitor<Integer> {
   public Integer visitJSONList(JSONList js) {
     return js.values.foldr(this, 0);
   }
+  public Integer visitJSONObject(JSONObject js) {
+    return js.pairs.map(new extractJSON()).foldr(this, 0);
+  }
 }
 
-//a list of JSON values
-class JSONList implements JSON {
-  IList<JSON> values;
  
-  JSONList(IList<JSON> values) {
-    this.values = values;
-  }
-
-  public <T> T accept(JSONVisitor<T> visitor) {
-    return visitor.visitJSONList(this);
+// generic pairs
+class Pair<X, Y> {
+  X x;
+  Y y;
+ 
+  Pair(X x, Y y) {
+    this.x = x;
+    this.y = y;
   }
 }
-
 
 class ExamplesJSONS {
     IList<JSON> jsons = new ConsList<JSON>(new JSONNumber(5),
@@ -178,12 +212,27 @@ class ExamplesJSONS {
         )
       )
     );
+
+    Pair<String, JSON> p1 = new Pair<String, JSON>("first", new JSONNumber(6));
+    Pair<String, JSON> p2 = new Pair<String, JSON>("second", new JSONBlank());
+    Pair<String, JSON> p3 = new Pair<String, JSON>("third", jsList);
+
+    IList<Pair<String, JSON>> pairs = new ConsList<Pair<String, JSON>>(p1, 
+      new ConsList<Pair<String, JSON>>(p2,
+        new ConsList<Pair<String, JSON>>(p3, new MtList<Pair<String, JSON>>())));
+    JSON jsObject = new JSONObject(pairs);
+
+    IList<JSON> jsons4 = new ConsList<JSON>(jsObject,
+      new ConsList<JSON>(new JSONBlank(), new ConsList<JSON>(new JSONBool(true),
+    new MtList<JSON>())));
     
 
 
     boolean testMethod(Tester t) {
       return t.checkExpect(jsons.map(new JSONToNumber()), expectedNumbers) &&
-             t.checkExpect(jsons2.foldr(new JSONToNumber(), 0), 21);
+             t.checkExpect(jsons2.foldr(new JSONToNumber(), 0), 21) && 
+             t.checkExpect(jsons4.foldr(new JSONToNumber(), 0), 18);
+
 
 
     }
